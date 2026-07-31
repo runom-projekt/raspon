@@ -34,6 +34,19 @@ wdrożeniowej i incydentowej patrz [OPERATIONS](OPERATIONS.md).
   błędem 409 z sugestią zablokowania konta zamiast kasowania. Usuwane są
   tylko konta bez żadnej historii transakcyjnej.
 
+### Incydent: superadmin zablokował sam siebie (2026-07-31, 22:30 CEST)
+
+Przełącznik blokady/aktywacji w `/admin/benutzer` nie miał zabezpieczenia
+przed użyciem na własnym koncie (w przeciwieństwie do zmiany roli i
+kasowania, które już to miały). Jedyne istniejące konto administratora
+kliknęło „Sperren" przy własnym wierszu i natychmiast straciło dostęp —
+`getSession()` odrzuca konta ze statusem `SUSPENDED`. Naprawione ręcznie
+przez bezpośrednie ustawienie `status: ACTIVE` w bazie przez Prisma
+wewnątrz kontenera aplikacji (bez znajomości hasła). Przyczyna źródłowa
+naprawiona w kodzie: przełącznik jest teraz ukryty na własnym wierszu, a
+`PATCH /api/admin/users/[id]/status` odrzuca też próbę zmiany własnego
+statusu po stronie API (commit `0eac81f`).
+
 ## 2026-07-31 (wieczór) — nawigacja mobilna, konto klienta, incydent wdrożeniowy
 
 ### Naprawione
