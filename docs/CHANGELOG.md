@@ -4,6 +4,28 @@ Chronologiczny dziennik istotnych zmian produkcyjnych i incydentów. Dla stanu
 zadań i priorytetów patrz [ROADMAP](ROADMAP.md); dla pełnej procedury
 wdrożeniowej i incydentowej patrz [OPERATIONS](OPERATIONS.md).
 
+## 2026-08-01 — pierwsze konto administratora, rola superadmina
+
+- Dodano pole `User.isSuperAdmin` (migracja
+  `20260801000500_user_super_admin_flag`) zamiast nowej wartości enuma
+  `UserRole` — świadomy wybór, żeby nie trzeba było przeglądać i poprawiać
+  ok. 40 miejsc w kodzie sprawdzających dziś `role === "ADMIN"`. Superadmin
+  ma pełne uprawnienia zwykłego admina (bo nadal ma `role: "ADMIN"`) plus
+  dodatkowo dostęp do zarządzania rolami innych użytkowników.
+- Nowy endpoint `PATCH /api/admin/users/[id]/role` i selektor roli na
+  `/admin/benutzer`, widoczny tylko dla superadmina — pozwala zmieniać rolę
+  innych kont między `CUSTOMER`/`OWNER`/`ADMIN`. Zwykli admini nie mogą
+  nadawać uprawnień admina innym kontom.
+- `getSession()` czyta `isSuperAdmin` (tak jak `role` i `status`) świeżo z
+  bazy przy każdym żądaniu — nadanie lub odebranie uprawnień superadmina
+  działa natychmiast, bez konieczności ponownego logowania.
+- Założono pierwsze konto administratora: `martimfirma@gmail.com`, rola
+  `ADMIN` + `isSuperAdmin: true`, status `ACTIVE`, e-mail zweryfikowany.
+  Hasło ustawione samodzielnie przez użytkownika (rejestracja + link
+  resetu hasła) — nigdy nie było widoczne dla asystenta. Konto przejdzie
+  obowiązkową konfigurację 2FA (TOTP) przy pierwszym logowaniu do panelu,
+  zgodnie z istniejącą polityką dla roli `ADMIN`.
+
 ## 2026-07-31 (wieczór) — nawigacja mobilna, konto klienta, incydent wdrożeniowy
 
 ### Naprawione
