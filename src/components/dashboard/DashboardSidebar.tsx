@@ -53,11 +53,7 @@ export function DashboardSidebar() {
 
   return (
     <>
-      <div className="flex items-center justify-between border-b border-graphite-100 bg-white px-4 py-3 md:hidden">
-        <Link href="/" className="flex items-center gap-2">
-          <Logo size={32} className="rounded-lg" />
-          <span className="font-display text-base font-bold text-graphite-900">Raspon</span>
-        </Link>
+      <div className="flex items-center gap-3 border-b border-graphite-100 bg-white px-4 py-3 md:hidden">
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Menü öffnen"
@@ -65,6 +61,10 @@ export function DashboardSidebar() {
         >
           <Menu size={22} />
         </button>
+        <Link href="/" className="flex items-center gap-2">
+          <Logo size={32} className="rounded-lg" />
+          <span className="font-display text-base font-bold text-graphite-900">Raspon</span>
+        </Link>
       </div>
 
       {isOpen && (

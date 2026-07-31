@@ -60,11 +60,7 @@ export function AdminSidebar() {
 
   return (
     <>
-      <div className="flex items-center justify-between border-b border-graphite-800 bg-graphite-950 px-4 py-3 text-graphite-300 md:hidden">
-        <Link href="/" className="flex items-center gap-2">
-          <Logo size={32} className="rounded-lg" />
-          <span className="font-display text-base font-bold text-white">Raspon Admin</span>
-        </Link>
+      <div className="flex items-center gap-3 border-b border-graphite-800 bg-graphite-950 px-4 py-3 text-graphite-300 md:hidden">
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Menü öffnen"
@@ -72,6 +68,10 @@ export function AdminSidebar() {
         >
           <Menu size={22} />
         </button>
+        <Link href="/" className="flex items-center gap-2">
+          <Logo size={32} className="rounded-lg" />
+          <span className="font-display text-base font-bold text-white">Raspon Admin</span>
+        </Link>
       </div>
 
       {isOpen && (

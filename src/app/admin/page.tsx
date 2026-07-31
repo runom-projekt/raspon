@@ -32,12 +32,12 @@ export default async function AdminOverviewPage() {
       <h1 className="font-display text-2xl font-bold text-graphite-900">Plattformstatistiken</h1>
 
       <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard label="Benutzer" value={String(userCount)} icon={Users} />
-        <StatCard label="Aktive Anhänger" value={String(trailerCount)} icon={Truck} />
-        <StatCard label="Buchungen gesamt" value={String(bookingCount)} icon={CalendarClock} />
-        <StatCard label="Umsatz (GMV)" value={formatCurrency(gmv)} icon={Wallet} />
-        <StatCard label="Plattformprovisionen" value={formatCurrency(commission)} icon={Percent} />
-        <StatCard label="Offene Meldungen" value={String(pendingReports)} icon={Flag} />
+        <StatCard label="Benutzer" value={String(userCount)} icon={Users} href="/admin/benutzer" />
+        <StatCard label="Aktive Anhänger" value={String(trailerCount)} icon={Truck} href="/admin/anhaenger" />
+        <StatCard label="Buchungen gesamt" value={String(bookingCount)} icon={CalendarClock} href="/admin/buchungen" />
+        <StatCard label="Umsatz (GMV)" value={formatCurrency(gmv)} icon={Wallet} href="/admin/auszahlungen" />
+        <StatCard label="Plattformprovisionen" value={formatCurrency(commission)} icon={Percent} href="/admin/auszahlungen" />
+        <StatCard label="Offene Meldungen" value={String(pendingReports)} icon={Flag} href="/admin/meldungen" />
       </div>
     </div>
   );
