@@ -47,6 +47,18 @@ naprawiona w kodzie: przełącznik jest teraz ukryty na własnym wierszu, a
 `PATCH /api/admin/users/[id]/status` odrzuca też próbę zmiany własnego
 statusu po stronie API (commit `0eac81f`).
 
+### Kafelki statystyk i menu mobilne w panelu admina/wynajmującego (2026-08-01)
+
+- Kafelki na `/admin` (Plattformstatistiken) były zwykłymi `<div>` — nie
+  dało się w nie kliknąć, trzeba było wchodzić przez rozwijane menu.
+  `StatCard` obsługuje teraz opcjonalny `href` i każdy kafelek prowadzi
+  bezpośrednio do swojej sekcji (Benutzer, Anhänger, Buchungen,
+  Auszahlungen, Meldungen).
+- Przycisk menu mobilnego (hamburger) w panelu admina i wynajmującego był
+  po prawej stronie górnego paska, a panel wysuwał się z lewej — myląca
+  niespójność. Przycisk przeniesiony na lewo, zgodnie z kierunkiem
+  wysuwania panelu, w obu panelach (ten sam współdzielony wzorzec).
+
 ## 2026-07-31 (wieczór) — nawigacja mobilna, konto klienta, incydent wdrożeniowy
 
 ### Naprawione
