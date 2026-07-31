@@ -25,6 +25,14 @@ wdrożeniowej i incydentowej patrz [OPERATIONS](OPERATIONS.md).
   resetu hasła) — nigdy nie było widoczne dla asystenta. Konto przejdzie
   obowiązkową konfigurację 2FA (TOTP) przy pierwszym logowaniu do panelu,
   zgodnie z istniejącą polityką dla roli `ADMIN`.
+- Dodano `DELETE /api/admin/users/[id]` — twarde kasowanie konta, dostępne
+  tylko dla superadmina (nie zwykłego admina, bo w przeciwieństwie do
+  blokady jest nieodwracalne). Konto z jakąkolwiek historią (rezerwacje,
+  przyczepy, recenzje, zgłoszenia, wypłaty, zwroty, wiadomości) **nie da
+  się skasować** — żadna z tych relacji nie ma kaskadowego usuwania w
+  schemacie, więc próba skasowania takiego konta kończy się czytelnym
+  błędem 409 z sugestią zablokowania konta zamiast kasowania. Usuwane są
+  tylko konta bez żadnej historii transakcyjnej.
 
 ## 2026-07-31 (wieczór) — nawigacja mobilna, konto klienta, incydent wdrożeniowy
 
