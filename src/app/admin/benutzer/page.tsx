@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { StatusToggleButton } from "@/components/admin/StatusToggleButton";
 import { VerifyIdentityButton } from "@/components/admin/VerifyIdentityButton";
 import { RoleSelect } from "@/components/admin/RoleSelect";
+import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Benutzer | Admin-Panel" };
@@ -99,20 +100,25 @@ export default async function AdminUsersPage() {
                 </td>
                 <td className="p-4 text-graphite-500">{formatDate(u.createdAt)}</td>
                 <td className="p-4">
-                  {u.status === "ACTIVE" ? (
-                    <StatusToggleButton
-                      endpoint={`/api/admin/users/${u.id}/status`}
-                      targetStatus="SUSPENDED"
-                      label="Sperren"
-                      variant="danger"
-                    />
-                  ) : (
-                    <StatusToggleButton
-                      endpoint={`/api/admin/users/${u.id}/status`}
-                      targetStatus="ACTIVE"
-                      label="Aktivieren"
-                    />
-                  )}
+                  <div className="flex items-center gap-2">
+                    {u.status === "ACTIVE" ? (
+                      <StatusToggleButton
+                        endpoint={`/api/admin/users/${u.id}/status`}
+                        targetStatus="SUSPENDED"
+                        label="Sperren"
+                        variant="danger"
+                      />
+                    ) : (
+                      <StatusToggleButton
+                        endpoint={`/api/admin/users/${u.id}/status`}
+                        targetStatus="ACTIVE"
+                        label="Aktivieren"
+                      />
+                    )}
+                    {canManageRoles && u.id !== session!.sub && (
+                      <DeleteUserButton userId={u.id} email={u.email} />
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
