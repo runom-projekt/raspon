@@ -59,6 +59,19 @@ statusu po stronie API (commit `0eac81f`).
   niespójność. Przycisk przeniesiony na lewo, zgodnie z kierunkiem
   wysuwania panelu, w obu panelach (ten sam współdzielony wzorzec).
 
+### Ochrona konta superadmina przed zwykłymi adminami (2026-08-01)
+
+Dwie realne luki: `PATCH /api/admin/users/[id]/status` sprawdzał tylko
+rolę wywołującego (`ADMIN`), nigdy flagę `isSuperAdmin` celu — czyli
+dowolny zwykły admin mógł zablokować konto superadmina. Lista
+`/admin/benutzer` pokazywała wszystkich użytkowników łącznie z
+superadminem, więc zwykły admin w ogóle widział to konto i mógł nim
+celować. Naprawione: endpoint statusu odrzuca teraz zmianę statusu
+konta superadmina, jeśli wywołujący sam nie jest superadminem; zapytanie
+listy użytkowników wyklucza konta `isSuperAdmin` całkowicie — superadmin
+nie jest zarządzanym użytkownikiem, więc nie należy do tej tabeli dla
+nikogo, także dla innych superadminów.
+
 ## 2026-07-31 (wieczór) — nawigacja mobilna, konto klienta, incydent wdrożeniowy
 
 ### Naprawione
