@@ -14,6 +14,7 @@ export default async function AdminUsersPage() {
   const canManageRoles = Boolean(session?.isSuperAdmin);
 
   const users = await prisma.user.findMany({
+    where: { isSuperAdmin: false },
     orderBy: { createdAt: "desc" },
     take: 100,
     select: {
@@ -22,7 +23,6 @@ export default async function AdminUsersPage() {
       lastName: true,
       email: true,
       role: true,
-      isSuperAdmin: true,
       status: true,
       createdAt: true,
       isIdVerified: true,
@@ -56,18 +56,7 @@ export default async function AdminUsersPage() {
                 </td>
                 <td className="p-4 text-graphite-600">{u.email}</td>
                 <td className="p-4">
-                  {canManageRoles && u.id !== session!.sub ? (
-                    <RoleSelect userId={u.id} role={u.role} />
-                  ) : (
-                    <span>
-                      {u.role}
-                      {u.isSuperAdmin && (
-                        <span className="ml-1.5 rounded-full bg-accent-50 px-2 py-0.5 text-[10px] font-bold uppercase text-accent-700">
-                          Super
-                        </span>
-                      )}
-                    </span>
-                  )}
+                  {canManageRoles ? <RoleSelect userId={u.id} role={u.role} /> : u.role}
                 </td>
                 <td className="p-4">
                   <span className="rounded-full bg-graphite-100 px-2.5 py-1 text-xs font-semibold">{u.status}</span>
