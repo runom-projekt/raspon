@@ -13,6 +13,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
+  if (id === session.sub) {
+    return NextResponse.json({ error: "Sie können Ihr eigenes Konto nicht sperren" }, { status: 400 });
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Ungültige Daten" }, { status: 400 });

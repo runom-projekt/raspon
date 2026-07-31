@@ -100,25 +100,27 @@ export default async function AdminUsersPage() {
                 </td>
                 <td className="p-4 text-graphite-500">{formatDate(u.createdAt)}</td>
                 <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    {u.status === "ACTIVE" ? (
-                      <StatusToggleButton
-                        endpoint={`/api/admin/users/${u.id}/status`}
-                        targetStatus="SUSPENDED"
-                        label="Sperren"
-                        variant="danger"
-                      />
-                    ) : (
-                      <StatusToggleButton
-                        endpoint={`/api/admin/users/${u.id}/status`}
-                        targetStatus="ACTIVE"
-                        label="Aktivieren"
-                      />
-                    )}
-                    {canManageRoles && u.id !== session!.sub && (
-                      <DeleteUserButton userId={u.id} email={u.email} />
-                    )}
-                  </div>
+                  {u.id === session!.sub ? (
+                    <span className="text-xs text-graphite-400">Ihr eigenes Konto</span>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {u.status === "ACTIVE" ? (
+                        <StatusToggleButton
+                          endpoint={`/api/admin/users/${u.id}/status`}
+                          targetStatus="SUSPENDED"
+                          label="Sperren"
+                          variant="danger"
+                        />
+                      ) : (
+                        <StatusToggleButton
+                          endpoint={`/api/admin/users/${u.id}/status`}
+                          targetStatus="ACTIVE"
+                          label="Aktivieren"
+                        />
+                      )}
+                      {canManageRoles && <DeleteUserButton userId={u.id} email={u.email} />}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
