@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import { Bell } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -15,26 +16,42 @@ export default async function MyBookingsPage() {
   const session = await getSession();
   if (!session) redirect("/anmelden");
 
-  const bookings = await prisma.booking.findMany({
-    where: { renterId: session.sub },
-    orderBy: { createdAt: "desc" },
-    include: {
-      trailer: {
-        select: { title: true, slug: true, city: true, photos: { take: 1, orderBy: { position: "asc" } } },
+  const [bookings, unreadCount] = await Promise.all([
+    prisma.booking.findMany({
+      where: { renterId: session.sub },
+      orderBy: { createdAt: "desc" },
+      include: {
+        trailer: {
+          select: { title: true, slug: true, city: true, photos: { take: 1, orderBy: { position: "asc" } } },
+        },
       },
-    },
-  });
+    }),
+    prisma.notification.count({ where: { userId: session.sub, channel: "IN_APP", readAt: null } }),
+  ]);
 
   return (
     <>
       <Header />
       <main className="container-page py-10">
-        <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-graphite-100 bg-white p-4">
+        <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-graphite-100 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-graphite-400">Mein Konto</p>
             <p className="truncate text-sm text-graphite-700">{session.email}</p>
           </div>
-          <LogoutButton className="shrink-0" />
+          <div className="flex shrink-0 items-center gap-3">
+            <Link
+              href="/benachrichtigungen"
+              className="relative flex items-center gap-2 rounded-full border border-graphite-200 px-3 py-2 text-sm font-medium text-graphite-700 hover:bg-graphite-50"
+            >
+              <Bell size={16} /> Benachrichtigungen
+              {unreadCount > 0 && (
+                <span className="flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+                  {Math.min(unreadCount, 99)}
+                </span>
+              )}
+            </Link>
+            <LogoutButton />
+          </div>
         </div>
         <h1 className="mb-6 font-display text-2xl font-bold text-graphite-900">Meine Buchungen</h1>
 
