@@ -1,0 +1,626 @@
+// Raspon — schemat bazy danych
+// PostgreSQL + Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// UŻYTKOWNICY
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  CUSTOMER
+  OWNER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+model User {
+  id                    String     @id @default(cuid())
+  email                 String?    @unique
+  emailVerified         DateTime?
+  passwordHash          String
+  firstName             String
+  lastName              String
+  phone                 String?    @unique
+  avatarUrl             String?
+  role                  UserRole   @default(CUSTOMER)
+  status                UserStatus @default(PENDING_VERIFICATION)
+  locale                String     @default("de")
+  country               String?
+  isIdVerified          Boolean    @default(false)
+  identityDocumentUrl   String?
+  identitySubmittedAt   DateTime?
+  twoFactorEnabled      Boolean    @default(false)
+  twoFactorSecret       String?
+  twoFactorLastUsedStep BigInt?
+  sessionVersion        Int        @default(0)
+  revolutCustomerId     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trailers                Trailer[]                @relation("OwnerTrailers")
+  bookingsAsRenter        Booking[]                @relation("RenterBookings")
+  reviewsWritten          Review[]                 @relation("ReviewAuthor")
+  favorites               Favorite[]
+  sentMessages            Message[]                @relation("MessageSender")
+  conversationsA          Conversation[]           @relation("ConversationParticipantA")
+  conversationsB          Conversation[]           @relation("ConversationParticipantB")
+  notifications           Notification[]
+  payouts                 Payout[]
+  reports                 Report[]                 @relation("ReportAuthor")
+  refreshTokens           RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  paymentReversals        PaymentReversal[]        @relation("ReversalRequester")
+  twoFactorRecoveryCodes  TwoFactorRecoveryCode[]
+
+  @@index([role])
+  @@index([email])
+}
+
+model TwoFactorRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String    @unique
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, usedAt])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id              String                     @id @default(cuid())
+  userId          String
+  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash       String                     @unique
+  tokenCiphertext String?                    @db.Text
+  expiresAt       DateTime
+  deliveryStatus  NotificationDeliveryStatus @default(PENDING)
+  attempts        Int                        @default(0)
+  nextAttemptAt   DateTime                   @default(now())
+  lastAttemptAt   DateTime?
+  deliveredAt     DateTime?
+  lastError       String?                    @db.Text
+  createdAt       DateTime                   @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([deliveryStatus, nextAttemptAt])
+}
+
+// ---------------------------------------------------------------------------
+// KATEGORIE I PRZYCZEPY
+// ---------------------------------------------------------------------------
+
+enum TrailerCategory {
+  CARGO // towarowe
+  CAR_TRANSPORTER // lawety
+  MOTORCYCLE // motocyklowe
+  HORSE // do przewozu koni
+  CAMPING // campingowe
+  TIPPER // wywrotki
+  FLATBED // podłodziowe
+  SPECIALIZED // specjalistyczne
+  OTHER
+}
+
+enum TrailerStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  SUSPENDED
+  ARCHIVED
+}
+
+model Trailer {
+  id       String          @id @default(cuid())
+  slug     String          @unique
+  ownerId  String
+  owner    User            @relation("OwnerTrailers", fields: [ownerId], references: [id])
+  category TrailerCategory
+  status   TrailerStatus   @default(DRAFT)
+
+  title       String
+  description String @db.Text
+
+  // Parametry techniczne
+  manufacturer   String?
+  model          String?
+  productionYear Int?
+  weightKg       Int? // masa własna
+  grossWeightKg  Int? // DMC
+  payloadKg      Int? // ładowność
+  lengthCm       Int?
+  widthCm        Int?
+  heightCm       Int?
+  vin            String? // numer identyfikacyjny (ukryty publicznie)
+
+  // Cennik
+  pricePerHour  Decimal  @db.Decimal(10, 2)
+  pricePerDay   Decimal  @db.Decimal(10, 2)
+  pricePerWeek  Decimal? @db.Decimal(10, 2)
+  currency      String   @default("EUR")
+  depositAmount Decimal  @default(0) @db.Decimal(10, 2)
+  commissionPct Decimal  @default(15) @db.Decimal(5, 2)
+
+  // Lokalizacja
+  addressLine String?
+  city        String
+  postalCode  String?
+  country     String  @default("DE")
+  latitude    Float
+  longitude   Float
+
+  // Wyposażenie (lista tagów, np. ["hamulec-najazdowy", "rampa", "plandeka"])
+  equipment String[] @default([])
+
+  viewCount     Int   @default(0)
+  averageRating Float @default(0)
+  reviewCount   Int   @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  photos       TrailerPhoto[]
+  documents    TrailerDocument[]
+  bookings     Booking[]
+  reviews      Review[]
+  favorites    Favorite[]
+  blockedDates BlockedDate[]
+  reports      Report[]
+
+  @@index([category])
+  @@index([city])
+  @@index([status])
+  @@index([ownerId])
+}
+
+model TrailerPhoto {
+  id        String  @id @default(cuid())
+  trailerId String
+  trailer   Trailer @relation(fields: [trailerId], references: [id], onDelete: Cascade)
+  url       String
+  position  Int     @default(0)
+  alt       String?
+
+  @@index([trailerId])
+}
+
+enum DocumentType {
+  REGISTRATION // dowód rejestracyjny
+  INSURANCE
+  INSPECTION // przegląd techniczny
+  OTHER
+}
+
+model TrailerDocument {
+  id        String       @id @default(cuid())
+  trailerId String
+  trailer   Trailer      @relation(fields: [trailerId], references: [id], onDelete: Cascade)
+  type      DocumentType
+  url       String
+  createdAt DateTime     @default(now())
+
+  @@index([trailerId])
+}
+
+model BlockedDate {
+  id        String   @id @default(cuid())
+  trailerId String
+  trailer   Trailer  @relation(fields: [trailerId], references: [id], onDelete: Cascade)
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+
+  @@index([trailerId, startDate, endDate])
+}
+
+// ---------------------------------------------------------------------------
+// REZERWACJE I PŁATNOŚCI
+// ---------------------------------------------------------------------------
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE // przyczepa odebrana
+  COMPLETED // zwrócona
+  CANCELLED
+  DECLINED
+}
+
+model Booking {
+  id        String  @id @default(cuid())
+  code      String  @unique // np. RSP-8F3K2Q
+  trailerId String
+  trailer   Trailer @relation(fields: [trailerId], references: [id])
+  renterId  String
+  renter    User    @relation("RenterBookings", fields: [renterId], references: [id])
+
+  startDate DateTime
+  endDate   DateTime
+  status    BookingStatus @default(PENDING)
+
+  pricePerUnit   Decimal       @db.Decimal(10, 2)
+  subtotal       Decimal       @db.Decimal(10, 2)
+  commissionAmt  Decimal       @db.Decimal(10, 2)
+  depositAmount  Decimal       @default(0) @db.Decimal(10, 2)
+  discountCodeId String?
+  discountCode   DiscountCode? @relation(fields: [discountCodeId], references: [id])
+  totalAmount    Decimal       @db.Decimal(10, 2)
+  currency       String        @default("EUR")
+
+  pickupNote String?
+  returnNote String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  cancelledAt DateTime?
+  expiresAt   DateTime
+
+  payment         Payment?
+  review          Review?
+  conversation    Conversation?
+  paymentReversal PaymentReversal?
+  payout          Payout?
+
+  @@index([trailerId, startDate, endDate])
+  @@index([renterId])
+  @@index([status])
+  @@index([status, expiresAt])
+}
+
+enum PaymentProvider {
+  REVOLUT
+}
+
+enum PaymentStatus {
+  REQUIRES_PAYMENT
+  AUTHORIZED
+  PAID
+  REFUNDED
+  PARTIALLY_REFUNDED
+  FAILED
+}
+
+model Payment {
+  id                String            @id @default(cuid())
+  bookingId         String            @unique
+  booking           Booking           @relation(fields: [bookingId], references: [id])
+  provider          PaymentProvider   @default(REVOLUT)
+  providerPaymentId String?
+  status            PaymentStatus     @default(REQUIRES_PAYMENT)
+  amount            Decimal           @db.Decimal(10, 2)
+  currency          String            @default("EUR")
+  depositHeld       Boolean           @default(false)
+  refundedAmount    Decimal           @default(0) @db.Decimal(10, 2)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  reversals         PaymentReversal[]
+
+  @@index([bookingId])
+}
+
+enum PaymentReversalType {
+  CANCEL_ORDER
+  FULL_REFUND
+}
+
+enum PaymentReversalStatus {
+  QUEUED
+  SUBMITTING
+  SUBMITTED
+  COMPLETED
+  FAILED
+}
+
+model PaymentReversal {
+  id                  String                @id @default(cuid())
+  bookingId           String                @unique
+  booking             Booking               @relation(fields: [bookingId], references: [id])
+  paymentId           String
+  payment             Payment               @relation(fields: [paymentId], references: [id])
+  requestedById       String
+  requestedBy         User                  @relation("ReversalRequester", fields: [requestedById], references: [id])
+  type                PaymentReversalType
+  status              PaymentReversalStatus @default(QUEUED)
+  amount              Decimal               @db.Decimal(10, 2)
+  currency            String
+  reason              String?               @db.Text
+  providerOperationId String?               @unique
+  attempts            Int                   @default(0)
+  nextAttemptAt       DateTime              @default(now())
+  processingStartedAt DateTime?
+  completedAt         DateTime?
+  lastError           String?               @db.Text
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([paymentId])
+}
+
+model PaymentWebhookEvent {
+  id              String          @id @default(cuid())
+  provider        PaymentProvider
+  eventType       String
+  providerOrderId String
+  payloadHash     String
+  receivedAt      DateTime        @default(now())
+  processedAt     DateTime?
+  outcome         String?
+
+  @@unique([provider, eventType, providerOrderId])
+  @@index([receivedAt])
+}
+
+model Payout {
+  id         String   @id @default(cuid())
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id])
+  bookingId  String?  @unique
+  booking    Booking? @relation(fields: [bookingId], references: [id])
+  amount     Decimal  @db.Decimal(10, 2)
+  currency   String   @default("EUR")
+  periodFrom DateTime
+  periodTo   DateTime
+  status     String   @default("PENDING") // PENDING | PAID | FAILED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([status, createdAt])
+}
+
+model DiscountCode {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  percentOff Int?
+  amountOff  Decimal? @db.Decimal(10, 2)
+  validFrom  DateTime
+  validTo    DateTime
+  maxUses    Int?
+  usedCount  Int      @default(0)
+  active     Boolean  @default(true)
+
+  bookings Booking[]
+}
+
+// ---------------------------------------------------------------------------
+// OPINIE, ULUBIONE, KOMUNIKACJA
+// ---------------------------------------------------------------------------
+
+model Review {
+  id         String   @id @default(cuid())
+  trailerId  String
+  trailer    Trailer  @relation(fields: [trailerId], references: [id])
+  authorId   String
+  author     User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  bookingId  String   @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  rating     Int // 1-5
+  comment    String?  @db.Text
+  ownerReply String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([trailerId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  trailerId String
+  trailer   Trailer  @relation(fields: [trailerId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, trailerId])
+}
+
+model Conversation {
+  id             String   @id @default(cuid())
+  bookingId      String?  @unique
+  booking        Booking? @relation(fields: [bookingId], references: [id])
+  participantAId String
+  participantA   User     @relation("ConversationParticipantA", fields: [participantAId], references: [id])
+  participantBId String
+  participantB   User     @relation("ConversationParticipantB", fields: [participantBId], references: [id])
+  createdAt      DateTime @default(now())
+
+  messages Message[]
+
+  @@index([participantAId])
+  @@index([participantBId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  senderId       String
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+  body           String       @db.Text
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  PUSH
+  IN_APP
+}
+
+enum NotificationDeliveryStatus {
+  UNKNOWN
+  PENDING
+  PROCESSING
+  RETRY
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model Notification {
+  id             String                     @id @default(cuid())
+  userId         String
+  user           User                       @relation(fields: [userId], references: [id])
+  channel        NotificationChannel
+  title          String
+  body           String
+  deliveryStatus NotificationDeliveryStatus @default(PENDING)
+  attempts       Int                        @default(0)
+  nextAttemptAt  DateTime                   @default(now())
+  lastAttemptAt  DateTime?
+  deliveredAt    DateTime?
+  lastError      String?                    @db.Text
+  readAt         DateTime?
+  createdAt      DateTime                   @default(now())
+
+  @@index([userId])
+  @@index([deliveryStatus, nextAttemptAt])
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+model Report {
+  id             String       @id @default(cuid())
+  authorId       String
+  author         User         @relation("ReportAuthor", fields: [authorId], references: [id])
+  trailerId      String?
+  trailer        Trailer?     @relation(fields: [trailerId], references: [id])
+  reason         String
+  details        String?      @db.Text
+  status         ReportStatus @default(OPEN)
+  resolutionNote String?      @db.Text
+  resolvedAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// CMS / BLOG / MARKETING
+// ---------------------------------------------------------------------------
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model BlogPost {
+  id              String     @id @default(cuid())
+  slug            String     @unique
+  title           String
+  excerpt         String
+  content         String     @db.Text
+  coverImageUrl   String?
+  category        String // poradniki | nowosci | aktualnosci | bezpieczenstwo | przepisy
+  status          PostStatus @default(DRAFT)
+  metaTitle       String?
+  metaDescription String?
+  authorName      String     @default("Zespół Raspon")
+  publishedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Banner {
+  id        String    @id @default(cuid())
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  position  String    @default("home_top")
+  active    Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model RateLimitBucket {
+  key       String   @id
+  count     Int
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
+model StorageObjectDeletion {
+  id                  String    @id @default(cuid())
+  publicUrl           String    @unique
+  status              String    @default("QUEUED")
+  attempts            Int       @default(0)
+  nextAttemptAt       DateTime  @default(now())
+  processingStartedAt DateTime?
+  completedAt         DateTime?
+  lastError           String?   @db.Text
+  createdAt           DateTime  @default(now())
+
+  @@index([status, nextAttemptAt])
+  @@index([completedAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actorEmail String?
+  action     String
+  entityType String
+  entityId   String
+  outcome    String   @default("SUCCESS")
+  requestId  String?
+  changes    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([createdAt])
+}

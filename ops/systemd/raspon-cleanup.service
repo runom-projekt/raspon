@@ -1,0 +1,13 @@
+[Unit]
+Description=Raspon safe production disk cleanup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/raspon/scripts/cleanup-production.sh
+User=root
+Group=root
+Nice=10
+IOSchedulingClass=idle
+

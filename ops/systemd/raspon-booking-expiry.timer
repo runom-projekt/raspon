@@ -1,0 +1,12 @@
+[Unit]
+Description=Expire unpaid Raspon bookings every minute
+
+[Timer]
+OnBootSec=1m
+OnUnitInactiveSec=1m
+AccuracySec=10s
+Persistent=true
+Unit=raspon-booking-expiry.service
+
+[Install]
+WantedBy=timers.target

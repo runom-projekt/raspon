@@ -1,0 +1,13 @@
+[Unit]
+Description=Raspon PostgreSQL production backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/raspon/scripts/backup-production.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+PrivateTmp=true
+NoNewPrivileges=true

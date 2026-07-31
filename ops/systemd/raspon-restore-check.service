@@ -1,0 +1,12 @@
+[Unit]
+Description=Verify the latest Raspon backup by restoring it
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/raspon/scripts/verify-backup-restore.sh
+Nice=15
+IOSchedulingClass=idle
+PrivateTmp=true
+NoNewPrivileges=true

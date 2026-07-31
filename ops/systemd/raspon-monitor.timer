@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Raspon production watchdog every five minutes
+
+[Timer]
+OnBootSec=2m
+OnUnitInactiveSec=5m
+AccuracySec=30s
+Persistent=true
+Unit=raspon-monitor.service
+
+[Install]
+WantedBy=timers.target

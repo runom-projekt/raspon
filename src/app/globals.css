@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Clash Display", "Inter", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-white text-graphite-900 antialiased;
+}
+
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
+::selection {
+  @apply bg-accent-500/20 text-graphite-900;
+}
+
+/* Sichtbarer Fokus für Tastaturzugänglichkeit (WCAG 2.4.7) */
+:focus-visible {
+  outline: 2px solid theme("colors.accent.500");
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@layer utilities {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-accent-500 text-white shadow-soft hover:bg-accent-600 hover:shadow-card active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply btn bg-graphite-900 text-white hover:bg-graphite-800 active:scale-[0.98];
+  }
+  .btn-outline {
+    @apply btn border border-graphite-200 bg-white text-graphite-900 hover:border-graphite-900 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply btn text-graphite-700 hover:bg-graphite-100;
+  }
+  .card {
+    @apply rounded-2xl border border-graphite-100 bg-white shadow-soft transition-shadow duration-200 hover:shadow-card;
+  }
+  .input {
+    @apply w-full rounded-xl border border-graphite-200 bg-white px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-graphite-900 focus:outline-none;
+  }
+}

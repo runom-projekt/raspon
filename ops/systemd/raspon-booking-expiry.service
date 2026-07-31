@@ -1,0 +1,12 @@
+[Unit]
+Description=Expire unpaid Raspon booking holds
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/raspon/scripts/expire-bookings.sh
+TimeoutStartSec=60
+PrivateTmp=true
+NoNewPrivileges=true

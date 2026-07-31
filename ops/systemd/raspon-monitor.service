@@ -1,0 +1,12 @@
+[Unit]
+Description=Raspon production health watchdog
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/raspon/scripts/monitor-production.sh
+TimeoutStartSec=90
+PrivateTmp=true
+NoNewPrivileges=true

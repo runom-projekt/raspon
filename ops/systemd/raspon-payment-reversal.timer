@@ -1,0 +1,12 @@
+[Unit]
+Description=Process Raspon payment reversals every minute
+
+[Timer]
+OnBootSec=1m
+OnUnitInactiveSec=1m
+AccuracySec=10s
+Persistent=true
+Unit=raspon-payment-reversal.service
+
+[Install]
+WantedBy=timers.target

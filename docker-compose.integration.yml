@@ -1,0 +1,29 @@
+services:
+  postgres-integration:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: raspon_test
+      POSTGRES_PASSWORD: raspon_test
+      POSTGRES_DB: raspon_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raspon_test -d raspon_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  booking-concurrency-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    depends_on:
+      postgres-integration:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://raspon_test:raspon_test@postgres-integration:5432/raspon_test?schema=public
+    command:
+      - /bin/sh
+      - -ec
+      - npx prisma migrate deploy && node --conditions=react-server --import tsx --test src/server/services/bookingService.integration.test.ts

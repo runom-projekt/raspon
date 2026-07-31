@@ -1,0 +1,74 @@
+{
+  "name": "raspon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Raspon — europejska platforma marketplace do wynajmu przyczep",
+  "scripts": {
+    "dev": "next dev",
+    "postinstall": "prisma generate",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/server/domain/*.test.ts src/lib/*.test.ts",
+    "test:integration": "docker compose -f docker-compose.integration.yml up --build --abort-on-container-exit --exit-code-from booking-concurrency-test",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1097.0",
+    "@aws-sdk/s3-request-presigner": "^3.1097.0",
+    "@prisma/client": "^5.20.0",
+    "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "framer-motion": "^11.5.4",
+    "jose": "^5.9.3",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.445.0",
+    "next": "15.5.22",
+    "next-themes": "^0.3.0",
+    "nodemailer": "^9.0.3",
+    "react": "^18.3.1",
+    "react-day-picker": "^9.1.3",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0",
+    "react-leaflet": "^4.2.1",
+    "recharts": "^2.12.7",
+    "resend": "^6.18.1",
+    "server-only": "^0.0.1",
+    "sonner": "^1.5.0",
+    "tailwind-merge": "^2.5.2",
+    "zod": "^3.23.8",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "^20.16.5",
+    "@types/nodemailer": "^7.0.12",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "15.5.22",
+    "postcss": "^8.4.47",
+    "prisma": "^5.20.0",
+    "tailwindcss": "^3.4.11",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.9",
+    "next": {
+      "postcss": "8.5.25",
+      "sharp": "0.35.3"
+    }
+  }
+}

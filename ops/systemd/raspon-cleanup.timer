@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Raspon safe disk cleanup weekly
+
+[Timer]
+OnCalendar=Sun *-*-* 03:45:00
+RandomizedDelaySec=30m
+Persistent=true
+Unit=raspon-cleanup.service
+
+[Install]
+WantedBy=timers.target
+

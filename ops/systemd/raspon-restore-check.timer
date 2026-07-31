@@ -1,0 +1,11 @@
+[Unit]
+Description=Verify a Raspon database restore weekly
+
+[Timer]
+OnCalendar=Sun *-*-* 03:30:00 UTC
+RandomizedDelaySec=30m
+Persistent=true
+Unit=raspon-restore-check.service
+
+[Install]
+WantedBy=timers.target
