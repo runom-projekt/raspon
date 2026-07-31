@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 import { StatusToggleButton } from "@/components/admin/StatusToggleButton";
 import { VerifyIdentityButton } from "@/components/admin/VerifyIdentityButton";
+import { RoleSelect } from "@/components/admin/RoleSelect";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Benutzer | Admin-Panel" };
 
 export default async function AdminUsersPage() {
+  const session = await getSession();
+  const canManageRoles = Boolean(session?.isSuperAdmin);
+
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,
@@ -16,6 +21,7 @@ export default async function AdminUsersPage() {
       lastName: true,
       email: true,
       role: true,
+      isSuperAdmin: true,
       status: true,
       createdAt: true,
       isIdVerified: true,
@@ -48,7 +54,20 @@ export default async function AdminUsersPage() {
                   {u.firstName} {u.lastName}
                 </td>
                 <td className="p-4 text-graphite-600">{u.email}</td>
-                <td className="p-4">{u.role}</td>
+                <td className="p-4">
+                  {canManageRoles && u.id !== session!.sub ? (
+                    <RoleSelect userId={u.id} role={u.role} />
+                  ) : (
+                    <span>
+                      {u.role}
+                      {u.isSuperAdmin && (
+                        <span className="ml-1.5 rounded-full bg-accent-50 px-2 py-0.5 text-[10px] font-bold uppercase text-accent-700">
+                          Super
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </td>
                 <td className="p-4">
                   <span className="rounded-full bg-graphite-100 px-2.5 py-1 text-xs font-semibold">{u.status}</span>
                 </td>

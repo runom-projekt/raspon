@@ -36,6 +36,7 @@ model User {
   phone                 String?    @unique
   avatarUrl             String?
   role                  UserRole   @default(CUSTOMER)
+  isSuperAdmin          Boolean    @default(false)
   status                UserStatus @default(PENDING_VERIFICATION)
   locale                String     @default("de")
   country               String?

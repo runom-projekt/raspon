@@ -24,6 +24,7 @@ export interface SessionPayload {
   sub: string; // userId
   email: string | null;
   role: UserRole;
+  isSuperAdmin?: boolean;
   mfa?: boolean;
   sessionVersion?: number;
   [key: string]: unknown;
@@ -115,7 +116,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   // Dzięki temu zawieszenie konta i zmiana roli działają bez oczekiwania na wygaśnięcie tokenu.
   const user = await prisma.user.findUnique({
     where: { id: payload.sub },
-    select: { id: true, email: true, role: true, status: true, twoFactorEnabled: true, sessionVersion: true },
+    select: { id: true, email: true, role: true, isSuperAdmin: true, status: true, twoFactorEnabled: true, sessionVersion: true },
   });
   if (!user || user.status === "SUSPENDED") return null;
   if (!isSessionVersionValid(payload.sessionVersion, user.sessionVersion)) return null;
@@ -126,6 +127,7 @@ export async function getSession(): Promise<SessionPayload | null> {
     sub: user.id,
     email: user.email,
     role: user.role,
+    isSuperAdmin: user.isSuperAdmin,
   };
 }
 
