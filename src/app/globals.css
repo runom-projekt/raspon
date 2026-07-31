@@ -9,16 +9,14 @@
 
 html {
   scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
 }
 
 body {
   @apply bg-white text-graphite-900 antialiased;
-}
-
-@media (max-width: 1023px) {
-  body {
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
-  }
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
 }
 
 ::selection {

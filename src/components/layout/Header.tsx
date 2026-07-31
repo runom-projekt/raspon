@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Bell, Heart, MessageCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -71,6 +72,7 @@ export async function Header() {
                 >
                   <User size={18} />
                 </Link>
+                <LogoutButton className="ml-1" />
               </>
             ) : (
               <>

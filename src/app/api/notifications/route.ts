@@ -24,3 +24,15 @@ export async function PATCH(req: NextRequest) {
   const result = await prisma.notification.updateMany({ where, data: { readAt: new Date() } });
   return NextResponse.json({ updated: result.count });
 }
+
+const deleteSchema = z.union([z.object({ all: z.literal(true) }), z.object({ id: z.string().cuid() })]);
+
+export async function DELETE(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Anmeldung erforderlich" }, { status: 401 });
+  const parsed = deleteSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Ungültige Daten" }, { status: 400 });
+  const where = "all" in parsed.data ? { userId: session.sub, channel: "IN_APP" as const } : { id: parsed.data.id, userId: session.sub, channel: "IN_APP" as const };
+  const result = await prisma.notification.deleteMany({ where });
+  return NextResponse.json({ deleted: result.count });
+}
