@@ -1,0 +1,77 @@
+# Dziennik zmian
+
+Chronologiczny dziennik istotnych zmian produkcyjnych i incydentów. Dla stanu
+zadań i priorytetów patrz [ROADMAP](ROADMAP.md); dla pełnej procedury
+wdrożeniowej i incydentowej patrz [OPERATIONS](OPERATIONS.md).
+
+## 2026-07-31 (wieczór) — nawigacja mobilna, konto klienta, incydent wdrożeniowy
+
+### Naprawione
+
+- **Dolne menu mobilne nakładało się na panel wynajmującego/admina.** Próg
+  ukrywania `MobileBottomNav` (`lg: 1024px`) nie zgadzał się z progiem
+  przełączania `DashboardSidebar`/`AdminSidebar` na widok statyczny
+  (`md: 768px`) — w tym zakresie szerokości obie nawigacje były widoczne
+  naraz. `MobileBottomNav` chowa się teraz na `/dashboard/*` i `/admin/*`.
+- **Karty rezerwacji na `/buchungen` przepełniały się w poziomie** na wąskich
+  ekranach (cena i status nie miały jak się zawinąć), co ściągało w bok całą
+  stronę razem z dolnym menu. Layout karty jest teraz responsywny: pionowy
+  układ na mobile, poziomy od `sm:`.
+- **Klient (rola bez OWNER/ADMIN) nie miał nigdzie przycisku wylogowania.**
+  „Abmelden” istniało wyłącznie w `DashboardSidebar` i `AdminSidebar`. Dodano
+  współdzielony `LogoutButton`, użyty w `Header` (desktop) i na `/buchungen`
+  (jedyny ekran, na który prowadzi zakładka „Konto” dla zwykłego klienta).
+- **Licznik nieprzeczytanych powiadomień przy „Konto” nie znikał** po
+  oznaczeniu jako przeczytane — liczony po stronie serwera w layoucie, bez
+  odświeżenia po akcji klienta. Dodano `router.refresh()` po każdej akcji w
+  `NotificationCenter`.
+- **Nie dało się skasować powiadomień**, tylko oznaczyć jako przeczytane.
+  Dodano `DELETE /api/notifications` (pojedynczo i zbiorczo) oraz przyciski
+  kasowania w UI.
+- **Plakietka z licznikiem powiadomień nie prowadziła nigdzie.** Zakładka
+  „Konto” na mobile linkuje do `/buchungen`, a jedyny link do
+  `/benachrichtigungen` (dzwonek w `Header`) jest ukryty poniżej `lg:` —
+  klient nie miał na telefonie żadnej drogi do listy powiadomień. Dodano
+  widoczny link „Benachrichtigungen” z plakietką na `/buchungen`.
+- **Przewijanie strony przestało działać na telefonie** po pierwszej próbie
+  naprawy przepełnienia poziomego — `overflow-x: hidden` na `<html>` może
+  blokować przewijanie dotykowe w niektórych przeglądarkach mobilnych, bo
+  traktują ten element jako główny kontener scrolla. Ograniczono
+  `overflow-x: hidden` wyłącznie do `<body>`.
+
+### Incydent: zepsute skrypty operacyjne po wdrożeniu (2026-07-31, ok. 23:13–23:26 CEST)
+
+**Przyczyna:** paczka wydania (`git archive`) do pierwszego z powyższych
+wdrożeń została zbudowana na Windowsie. Bez wymuszonych atrybutów końca
+linii Git zapisał skrypty powłoki w archiwum z CRLF zamiast LF, co złamało
+ich shebang (`#!/usr/bin/env bash\r` → `env` szuka programu `bash\r`).
+
+**Wpływ:** przez ok. 13 minut wszystkie zadania cykliczne na serwerze
+kończyły się błędem (`exit 127`): `raspon-notification-worker` (powiadomienia
+i **reset hasła** — użytkownik nie mógł się zalogować po wylogowaniu),
+`raspon-monitor`, `raspon-booking-expiry`, `raspon-payment-reversal`. Backup
+i restore-check nie miały uruchomienia w tym oknie.
+
+**Działanie:** ręczne odpalenie kolejki powiadomień przez wewnętrzne API
+(z pominięciem zepsutego skryptu) wysłało zaległy e-mail resetu hasła.
+Końce linii we wszystkich 10 skryptów w `/opt/raspon/scripts` naprawiono
+na miejscu (`sed -i 's/\r$//'`, za zgodą użytkownika — plik logiki nie
+zmienił się, tylko znaki końca linii). Wszystkie usługi cykliczne
+zweryfikowano jako ponownie zielone w `journalctl`.
+
+**Zapobieganie:** dodano `.gitattributes` (`*.sh`, `Dockerfile`, `*.yml`,
+`*.yaml` → `eol=lf`), wymuszające LF w `git archive` niezależnie od
+lokalnego `core.autocrlf`. Zweryfikowano przed kolejnym wdrożeniem
+(`file` na rozpakowanych skryptach z archiwum). Warte rozważenia w
+przyszłości: krok weryfikacji końców linii wpisany na stałe do
+`deploy-production.sh`, żeby nie zależał od pamięci osoby wdrażającej.
+
+### Wdrożenia
+
+| Release ID | Commit | Zakres |
+| --- | --- | --- |
+| `20260731-e337e38` | `e337e38` | dolne menu, wylogowanie, kasowanie powiadomień |
+| `20260731-6b507f9` | `6b507f9` | przewijanie, link do powiadomień na `/buchungen` |
+
+Commit `381f70a` (`.gitattributes`) nie wymagał osobnego wdrożenia — nie
+zmienia zachowania aplikacji, tylko sposób budowania przyszłych archiwów.
