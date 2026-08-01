@@ -8,14 +8,46 @@ import { cn } from "@/lib/utils";
 
 const UPLOAD_TIMEOUT_MS = 30000;
 
+function isHeicFile(file: File): boolean {
+  return file.type === "image/heic" || file.type === "image/heif" || /\.hei[cf]$/i.test(file.name);
+}
+
+// iPhones speichern Kamerafotos standardmäßig als HEIC, das der Server nicht
+// annimmt (kein zuverlässiges Rendering in anderen Browsern) — hier serverseitig
+// akzeptables JPEG erzeugen, statt den Nutzer die Kamera umstellen zu lassen.
+async function convertHeicToJpeg(file: File): Promise<File> {
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas wird nicht unterstützt");
+  ctx.drawImage(bitmap, 0, 0);
+  bitmap.close();
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
+  if (!blob) throw new Error("Konvertierung fehlgeschlagen");
+  return new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" });
+}
+
 async function uploadFile(file: File, folder: "trailers" | "banners" | "blog" | "identity" | "registration"): Promise<string> {
+  let uploadable = file;
+  if (isHeicFile(file)) {
+    try {
+      uploadable = await convertHeicToJpeg(file);
+    } catch {
+      throw new Error(
+        `${file.name}: HEIC-Fotos konnten nicht konvertiert werden. Bitte in den Kameraeinstellungen "Am kompatibelsten" (JPEG) wählen oder das Foto als JPG exportieren.`
+      );
+    }
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
   try {
     const presignRes = await fetch("/api/uploads/presign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ folder, contentType: file.type, fileSize: file.size }),
+      body: JSON.stringify({ folder, contentType: uploadable.type, fileSize: uploadable.size }),
       signal: controller.signal,
     });
     if (!presignRes.ok) {
@@ -26,8 +58,8 @@ async function uploadFile(file: File, folder: "trailers" | "banners" | "blog" | 
 
     const putRes = await fetch(uploadUrl, {
       method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file,
+      headers: { "Content-Type": uploadable.type },
+      body: uploadable,
       signal: controller.signal,
     });
     if (!putRes.ok) {
@@ -77,7 +109,7 @@ export function ImageUploadField({ folder, value, onChange, label, className }: 
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/*"
         className="hidden"
         onChange={(e) => handleFile(e.target.files?.[0])}
       />

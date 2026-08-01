@@ -97,7 +97,7 @@ export function TrailerPhotosManager({ trailerId, initialPhotos, maxFiles = 10 }
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/*"
         multiple
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
