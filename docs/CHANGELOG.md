@@ -6,6 +6,21 @@ wdrożeniowej i incydentowej patrz [OPERATIONS](OPERATIONS.md).
 
 ## 2026-08-01 — pierwsze konto administratora, rola superadmina
 
+### Migracja dostawcy SMS z MessageBird na Bird
+
+MessageBird zmienił markę na Bird i wycofał stary endpoint
+`rest.messagebird.com/messages` oparty na nadawcy (`originator`) na
+rzecz nowego API przypisanego do workspace'a i kanału. Zaktualizowano
+`MessageBirdSmsProvider`, żeby wysyłał żądania na
+`api.bird.com/workspaces/{workspaceId}/channels/{channelId}/messages`
+z nowym formatem body (`receiver.contacts` / `body.text.text`).
+`MESSAGEBIRD_ORIGINATOR` zastąpiono zmiennymi
+`MESSAGEBIRD_WORKSPACE_ID` i `MESSAGEBIRD_CHANNEL_ID` w `.env.example`,
+`docker-compose.prod.yml` oraz w sprawdzaniu gotowości integracji
+(`integrationReadiness.ts`) i `isSmsConfigured()` — SMS liczy się jako
+skonfigurowane tylko wtedy, gdy wszystkie trzy zmienne (klucz API,
+workspace, kanał) są ustawione.
+
 - Dodano pole `User.isSuperAdmin` (migracja
   `20260801000500_user_super_admin_flag`) zamiast nowej wartości enuma
   `UserRole` — świadomy wybór, żeby nie trzeba było przeglądać i poprawiać
