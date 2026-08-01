@@ -6,6 +6,28 @@ wdrożeniowej i incydentowej patrz [OPERATIONS](OPERATIONS.md).
 
 ## 2026-08-01 — pierwsze konto administratora, rola superadmina
 
+### Naprawiono upload zdjęć odrzucający pliki HEIC z iPhone'a
+
+iPhone zapisuje zdjęcia z aparatu domyślnie jako HEIC, a pipeline uploadu
+akceptował tylko JPEG/PNG/WebP (formaty wymagane, żeby zdjęcia przyczep z R2
+renderowały się niezawodnie w przeglądarce każdego odwiedzającego, nie tylko
+Safari). Wybranie "normalnego" zdjęcia z galerii na iPhonie kończyło się cichym
+błędem nieobsługiwanego formatu, co wyglądało jak zepsuty selektor. Dodano
+konwersję HEIC/HEIF do JPEG po stronie przeglądarki (`createImageBitmap` +
+canvas) tuż przed uploadem, więc akceptowane formaty po stronie serwera się nie
+zmieniły. Rozszerzono też atrybut `accept` inputu z jawnej listy MIME-typów na
+`image/*` — zbyt wąska lista bywa przyczyną, że niektóre przeglądarki mobilne
+nie oferują aparatu w natywnym selektorze.
+
+### Zamknięto ryzyko starych publicznych dokumentów KYC po inwentaryzacji
+
+Zinwentaryzowano `User.identityDocumentUrl` i `TrailerDocument.url` na
+produkcji: zero rekordów z publicznym URL-em, tabela `TrailerDocument` jest
+pusta. Prywatny bucket R2 działał od pierwszego uploadu KYC — nie było starych
+publicznych dokumentów do migracji ani usunięcia. Punkt z ROADMAP/SECURITY/
+OPERATIONS zamknięty; przyszła wartość zaczynająca się od `http://`/`https://`
+oznaczałaby regresję, nie rutynową migrację.
+
 ### Migracja dostawcy SMS z MessageBird na Bird
 
 MessageBird zmienił markę na Bird i wycofał stary endpoint
