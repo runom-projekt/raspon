@@ -6,6 +6,22 @@ wdrożeniowej i incydentowej patrz [OPERATIONS](OPERATIONS.md).
 
 ## 2026-08-01 — pierwsze konto administratora, rola superadmina
 
+### Naprawiono błędne współrzędne GPS przyczep na mapie
+
+Formularz dodawania przyczepy nigdy nie miał wyboru lokalizacji ani geokodowania
+— `latitude`/`longitude` były na stałe ustawione na współrzędne Berlina
+(52.5200, 13.4050) w stanie formularza i wysyłane bez zmian niezależnie od
+wpisanego miasta. Każda nowa przyczepa pokazywała się na mapie w tym samym,
+błędnym miejscu, chyba że właściciel akurat mieszkał w Berlinie. Usunięto
+`latitude`/`longitude` z danych przesyłanych przez klienta i dodano
+`src/lib/geocoding.ts`, które przelicza `addressLine`/`postalCode`/`city`/
+`country` na prawdziwe współrzędne przez Nominatim (OpenStreetMap) — zarówno
+przy tworzeniu przyczepy, jak i przy każdej zmianie adresu przez `PATCH
+/api/trailers/[id]`. Błąd geokodowania zwraca teraz czytelny błąd 400 zamiast
+cicho zapisywać złą wartość domyślną. Naprawiono też dwie istniejące przyczepy
+na produkcji (Willich, 47877), które miały zapisane współrzędne Berlina —
+zaktualizowano na poprawne 51.2641433, 6.5446958.
+
 ### Naprawiono upload zdjęć odrzucający pliki HEIC z iPhone'a
 
 iPhone zapisuje zdjęcia z aparatu domyślnie jako HEIC, a pipeline uploadu
