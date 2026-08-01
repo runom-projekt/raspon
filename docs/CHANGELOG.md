@@ -6,6 +6,32 @@ wdrożeniowej i incydentowej patrz [OPERATIONS](OPERATIONS.md).
 
 ## 2026-08-01 — pierwsze konto administratora, rola superadmina
 
+### Dodano ocenę ryzyka refundu (RUNOM) dla anulowania opłaconej rezerwacji
+
+`decideRenterCancellation`/`cancelBookingByRenter` dopuszczały anulowanie
+rezerwacji `CONFIRMED`+`PAID` i tworzyły pełny refund (`PaymentReversal`)
+**bezwarunkowo, bez żadnej bramki**, niezależnie od kwoty czy terminu do
+odbioru — mimo że `docs/adr/0001-booking-status-machine.md` i
+`docs/ROADMAP.md` (Etap 1, P0) wprost mówiły, że ta ścieżka ma pozostać
+zablokowana do czasu wdrożenia polityki refundów. Silnik wykonawczy
+(`paymentReversalService.ts`) był dojrzały i poprawny — brakowało wyłącznie
+warstwy decyzyjnej.
+
+Dodano integrację z RUNOM (system agentowy, osobny projekt) —
+`docs/adr/0003-runom-refund-approval.md`: kwota refundu poniżej
+konfigurowalnego progu (`RUNOM_REFUND_AUTO_APPROVE_MAX_EUR`, domyślnie 200
+EUR) anuluje się natychmiast jak dotąd; od progu wzwyż rezerwacja czeka
+(`Booking.pendingCancellationTaskId`, nowa nullable kolumna) na zatwierdzenie
+administratora poza Raspon, finalizowane nowym workerem `POST
+/api/internal/runom-reconcile`. **Bez skonfigurowanego RUNOM ścieżka jest
+teraz zablokowana (503), nie cicho dozwolona** — przywraca literę ADR-0001.
+Anulowanie nieopłaconej rezerwacji (najczęstszy przypadek) nie zmieniło się.
+
+Wymaga przed produkcją: skonfigurować zmienne `RUNOM_*` w `.env` i dodać
+zadanie cron/systemd wywołujące `runom-reconcile` (ten sam wzorzec co
+istniejący worker `payment-reversals/process`) — bez tego rezerwacje powyżej
+progu utkną w stanie oczekiwania.
+
 ### Naprawiono błędne współrzędne GPS przyczep na mapie
 
 Formularz dodawania przyczepy nigdy nie miał wyboru lokalizacji ani geokodowania
