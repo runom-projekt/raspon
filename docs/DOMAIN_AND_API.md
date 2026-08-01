@@ -62,8 +62,10 @@ Podział odpowiedzialności:
 | `ACTIVE → COMPLETED` | właściciel po zwrocie |
 | `PENDING → CANCELLED` | klient lub administrator |
 
-Anulowanie po płatności pozostaje niedostępne do czasu wdrożenia polityki
-refundów i rozliczeń.
+Anulowanie po płatności (`CONFIRMED`+`PAID`) jest dostępne od `docs/adr/0003-runom-refund-approval.md`
+— ocena ryzyka delegowana do RUNOM (system zewnętrzny), kwoty poniżej progu
+anulują się natychmiast, powyżej progu rezerwacja czeka (`pendingCancellationTaskId`)
+na zatwierdzenie administratora, finalizowane przez worker `runom-reconcile`.
 
 Tworzenie rezerwacji jest serializowane per przyczepa blokadą transakcyjną
 PostgreSQL. Sprawdzenie kolizji, rezerwacja rabatu, zapis `Booking` i zapis

@@ -65,7 +65,8 @@ etapów 0–2.
 - [x] Weryfikować kwotę, walutę i powiązanie zamówienia w webhooku.
 - [x] Odrzucać webhooki starsze niż 5 minut i zapewnić idempotencję skutków.
 - [x] Dodać trwały dziennik odebranych zdarzeń po przygotowaniu migracji bazy.
-- [ ] Dodać politykę anulowania, refundów, kaucji i sporów.
+- [x] Dodać politykę anulowania i refundów po płatności — ocena ryzyka delegowana do RUNOM (`docs/adr/0003-runom-refund-approval.md`), próg kwotowy konfigurowalny. Wymaga wdrożenia workera `runom-reconcile` (cron/systemd) przed uruchomieniem na produkcji.
+- [ ] Polityka kaucji i sporów pozostaje otwarta — poza zakresem ADR-0003.
 
 ### Tożsamość i dane — P0
 

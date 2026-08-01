@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createServer, type Server } from "node:http";
 import { after, before, test } from "node:test";
 import { PrismaClient } from "@prisma/client";
 import { rateLimit } from "../../lib/rate-limit";
@@ -28,8 +29,57 @@ const prisma = new PrismaClient();
 let ownerId: string;
 let renterId: string;
 let trailerId: string;
+let fakeRunom: Server;
+
+/**
+ * Serwer zastępczy RUNOM na czas testów integracyjnych — auto-akceptuje
+ * KAŻDE żądanie zatwierdzenia (ten sam efekt co niskie riskScore po prawdziwej
+ * stronie RUNOM), żeby testy koncurrencji `bookingCancellationService`
+ * mogły przejść przez realny kod klienta (`src/lib/runom.ts`), nie fikcyjny
+ * bypass. Zob. docs/adr/0003-runom-refund-approval.md.
+ */
+function startFakeRunom(): Promise<Server> {
+  let taskCounter = 0;
+  const server = createServer((req, res) => {
+    let body = "";
+    req.on("data", (chunk) => { body += chunk; });
+    req.on("end", () => {
+      res.setHeader("content-type", "application/json");
+      if (req.method === "POST" && req.url === "/internal/tasks") {
+        taskCounter += 1;
+        res.writeHead(201);
+        res.end(JSON.stringify({ task: { id: `fake-task-${taskCounter}`, status: "created" } }));
+        return;
+      }
+      if (req.method === "POST" && req.url?.endsWith("/transition")) {
+        const id = req.url.split("/")[3];
+        res.writeHead(200);
+        res.end(JSON.stringify({ task: { id, status: "in_progress" } }));
+        return;
+      }
+      if (req.method === "POST" && req.url?.endsWith("/request-approval")) {
+        const id = req.url.split("/")[3];
+        res.writeHead(200);
+        res.end(JSON.stringify({ task: { id, status: "in_progress" }, autoApproved: true }));
+        return;
+      }
+      res.writeHead(404);
+      res.end(JSON.stringify({ error: "not found in fake RUNOM" }));
+    });
+  });
+  return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(server)));
+}
 
 before(async () => {
+  fakeRunom = await startFakeRunom();
+  const address = fakeRunom.address();
+  if (address && typeof address === "object") {
+    process.env.RUNOM_API_URL = `http://127.0.0.1:${address.port}`;
+    process.env.RUNOM_AGENT_ID = "integration-test-agent";
+    process.env.RUNOM_AGENT_TOKEN = "integration-test-token";
+    process.env.RUNOM_OWNER_USER_ID = "integration-test-owner";
+  }
+
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   const owner = await prisma.user.create({
@@ -80,6 +130,7 @@ before(async () => {
 
 after(async () => {
   await prisma.$disconnect();
+  await new Promise<void>((resolve) => fakeRunom.close(() => resolve()));
 });
 
 test("two concurrent requests cannot double-book the same trailer and dates", async () => {
@@ -343,7 +394,9 @@ test("concurrent cancellation of a paid booking queues exactly one full refund",
     cancelBookingByRenter({ bookingId: booking.id, actor, requestId: crypto.randomUUID() }),
     cancelBookingByRenter({ bookingId: booking.id, actor, requestId: crypto.randomUUID() }),
   ]);
-  assert.equal(first?.id, second?.id);
+  assert.equal(first.outcome, "cancelled");
+  assert.equal(second.outcome, "cancelled");
+  assert.equal(first.outcome === "cancelled" && first.reversal?.id, second.outcome === "cancelled" && second.reversal?.id);
   const reversals = await prisma.paymentReversal.findMany({ where: { bookingId: booking.id } });
   assert.equal(reversals.length, 1);
   assert.equal(reversals[0]?.type, "FULL_REFUND");

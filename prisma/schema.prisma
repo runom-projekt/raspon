@@ -299,6 +299,14 @@ model Booking {
   cancelledAt DateTime?
   expiresAt   DateTime
 
+  // RUNOM (docs/adr/0003-runom-refund-approval.md): niepuste, gdy anulowanie
+  // OPŁACONEJ rezerwacji czeka na decyzję Approval Engine RUNOM — rezerwacja
+  // pozostaje CONFIRMED, żaden PaymentReversal jeszcze nie istnieje. Worker
+  // uzgadniający (src/app/api/internal/runom-reconcile) czyści to pole po
+  // rozstrzygnięciu (zatwierdzone -> anulowanie wykonane; odrzucone -> pole
+  // wyczyszczone, rezerwacja bez zmian).
+  pendingCancellationTaskId String?
+
   payment         Payment?
   review          Review?
   conversation    Conversation?
@@ -309,6 +317,7 @@ model Booking {
   @@index([renterId])
   @@index([status])
   @@index([status, expiresAt])
+  @@index([pendingCancellationTaskId])
 }
 
 enum PaymentProvider {
