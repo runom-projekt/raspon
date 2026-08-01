@@ -5,7 +5,11 @@ import { MessageBirdSmsProvider } from "./messagebird";
 export type { SmsProvider, SmsMessage } from "./types";
 
 export function isSmsConfigured(): boolean {
-  return Boolean(process.env.MESSAGEBIRD_API_KEY);
+  return Boolean(
+    process.env.MESSAGEBIRD_API_KEY &&
+    process.env.MESSAGEBIRD_WORKSPACE_ID &&
+    process.env.MESSAGEBIRD_CHANNEL_ID
+  );
 }
 
 // Weitere Anbieter (z. B. Vonage) können hier ergänzt werden — einfach die

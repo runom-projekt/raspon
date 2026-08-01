@@ -32,7 +32,10 @@ export function getIntegrationReadiness(
       smtpConfigured
         ? "configured"
         : "unavailable",
-    sms: env.MESSAGEBIRD_API_KEY ? "configured" : "unavailable",
+    sms:
+      env.MESSAGEBIRD_API_KEY && env.MESSAGEBIRD_WORKSPACE_ID && env.MESSAGEBIRD_CHANNEL_ID
+        ? "configured"
+        : "unavailable",
     privateStorage:
       env.R2_ACCOUNT_ID &&
       env.R2_ACCESS_KEY_ID &&
