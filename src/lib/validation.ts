@@ -107,8 +107,6 @@ export const trailerCreateSchema = z.object({
   city: z.string().min(2),
   postalCode: z.string().optional(),
   country: z.string().default("DE"),
-  latitude: z.coerce.number().finite().min(-90).max(90),
-  longitude: z.coerce.number().finite().min(-180).max(180),
   equipment: z.array(z.string()).default([]),
   photos: z.array(z.string().url()).default([]),
   registrationDocumentUrl: z.string().regex(

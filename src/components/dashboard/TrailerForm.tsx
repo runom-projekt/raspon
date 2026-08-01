@@ -30,8 +30,6 @@ const FIELD_LABELS: Record<string, string> = {
   addressLine: "Adresse",
   city: "Stadt",
   postalCode: "Postleitzahl",
-  latitude: "Breitengrad",
-  longitude: "Längengrad",
   photos: "Fotos",
   registrationDocumentUrl: "Fahrzeugschein / Kfz-Brief",
 };
@@ -67,8 +65,6 @@ const initialState = {
   city: "",
   postalCode: "",
   country: "DE",
-  latitude: "52.5200",
-  longitude: "13.4050",
   equipment: [] as string[],
   photos: [] as string[],
   registrationDocumentUrl: "",

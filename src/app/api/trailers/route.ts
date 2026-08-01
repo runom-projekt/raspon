@@ -5,6 +5,7 @@ import { trailerCreateSchema } from "@/lib/validation";
 import { slugify } from "@/lib/utils";
 import { isEmailConfigured } from "@/lib/email";
 import { isManagedPublicUrl } from "@/lib/storage";
+import { geocodeAddress } from "@/lib/geocoding";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -35,6 +36,19 @@ export async function POST(req: NextRequest) {
   if (!data.photos.every(isManagedPublicUrl) || !data.registrationDocumentUrl.startsWith(`registration/${session.sub}/`)) {
     return NextResponse.json({ error: "Ungültige oder nicht autorisierte Dateien" }, { status: 403 });
   }
+  const location = await geocodeAddress({
+    addressLine: data.addressLine,
+    postalCode: data.postalCode,
+    city: data.city,
+    country: data.country,
+  });
+  if (!location) {
+    return NextResponse.json(
+      { error: "Adresse konnte nicht gefunden werden. Bitte Stadt und Postleitzahl prüfen." },
+      { status: 400 }
+    );
+  }
+
   const baseSlug = slugify(`${data.title}-${data.city}`);
   let slug = baseSlug;
   let suffix = 1;
@@ -67,8 +81,8 @@ export async function POST(req: NextRequest) {
       city: data.city,
       postalCode: data.postalCode,
       country: data.country,
-      latitude: data.latitude,
-      longitude: data.longitude,
+      latitude: location.latitude,
+      longitude: location.longitude,
       equipment: data.equipment,
       status: "PENDING_REVIEW",
       photos: {

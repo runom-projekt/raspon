@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { trailerCreateSchema } from "@/lib/validation";
 import { appendAuditLog } from "@/server/services/auditService";
+import { geocodeAddress } from "@/lib/geocoding";
 
 async function assertOwnership(id: string, userId: string, role: string) {
   const trailer = await prisma.trailer.findUnique({ where: { id } });
@@ -30,11 +31,29 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Ungültige Daten", issues: parsed.error.flatten() }, { status: 400 });
   }
 
+  const addressFields = ["city", "postalCode", "addressLine", "country"] as const;
+  const addressChanged = addressFields.some((field) => parsed.data[field] !== undefined);
+  let location: { latitude: number; longitude: number } | undefined;
+  if (addressChanged) {
+    location = (await geocodeAddress({
+      addressLine: parsed.data.addressLine ?? check.trailer.addressLine ?? undefined,
+      postalCode: parsed.data.postalCode ?? check.trailer.postalCode ?? undefined,
+      city: parsed.data.city ?? check.trailer.city,
+      country: parsed.data.country ?? check.trailer.country,
+    })) ?? undefined;
+    if (!location) {
+      return NextResponse.json(
+        { error: "Adresse konnte nicht gefunden werden. Bitte Stadt und Postleitzahl prüfen." },
+        { status: 400 }
+      );
+    }
+  }
+
   const trailer = await prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`trailer-edit:${id}`}))`;
     const current = await tx.trailer.findUniqueOrThrow({ where: { id } });
     const requiresReview = session.role !== "ADMIN" && ["PUBLISHED", "SUSPENDED"].includes(current.status);
-    const updated = await tx.trailer.update({ where: { id }, data: { ...parsed.data, status: requiresReview ? "PENDING_REVIEW" : undefined } });
+    const updated = await tx.trailer.update({ where: { id }, data: { ...parsed.data, ...location, status: requiresReview ? "PENDING_REVIEW" : undefined } });
     if (requiresReview) await tx.notification.create({ data: { userId: session.sub, channel: "IN_APP", title: "Erneute Prüfung erforderlich", body: `Ihre Änderungen an „${current.title}“ werden vor der Veröffentlichung erneut geprüft.` } });
     await appendAuditLog(tx, { actor: session, requestId: req.headers.get("x-request-id"), action: "TRAILER_UPDATED", entityType: "Trailer", entityId: id, changes: { fields: Object.keys(parsed.data), status: requiresReview ? { from: current.status, to: "PENDING_REVIEW" } : undefined } });
     return updated;
