@@ -1,0 +1,12 @@
+[Unit]
+Description=Reconcile Raspon RUNOM refund approvals every minute
+
+[Timer]
+OnBootSec=1m
+OnUnitInactiveSec=1m
+AccuracySec=10s
+Persistent=true
+Unit=raspon-runom-reconcile.service
+
+[Install]
+WantedBy=timers.target

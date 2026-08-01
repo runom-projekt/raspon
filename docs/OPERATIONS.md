@@ -150,6 +150,22 @@ wysłaniu; do weryfikacji pozostaje tylko hash. Niedostępny dostawca nie powodu
 utraty żądania ani zużycia limitu prób. Worker ponawia dostarczenie do czasu
 wygaśnięcia godzinnego tokenu, a backlog i trwałe błędy obejmuje health kolejki.
 
+## Zatwierdzanie refundu przez RUNOM
+
+Anulowanie rezerwacji `CONFIRMED`+`PAID` powyżej progu
+`RUNOM_REFUND_AUTO_APPROVE_MAX_EUR` czeka na zatwierdzenie administratora poza
+Raspon (`docs/adr/0003-runom-refund-approval.md`). `Booking.pendingCancellationTaskId`
+oznacza oczekującą sprawę. `raspon-runom-reconcile.timer` co minutę odpytuje
+RUNOM przez chroniony lokalny endpoint `POST /api/internal/runom-reconcile`
+(ten sam sekret co worker powiadomień) i finalizuje każdą rezerwację: zatwierdzona
+sprawa uruchamia anulowanie i kolejkuje `PaymentReversal` dokładnie jak ścieżka
+natychmiastowa, odrzucona przywraca rezerwację do `CONFIRMED` i powiadamia
+najemcę. Stan workera znajduje się w
+`/var/lib/raspon-ops/runom-reconcile-worker-status.json`.
+
+Bez skonfigurowanych zmiennych `RUNOM_*` ta ścieżka anulowania zwraca `503` —
+świadomie, zamiast cicho pomijać ocenę ryzyka.
+
 ## Audit administracyjny
 
 Zmiany użytkowników, weryfikacji KYC, ofert, wypłat, zgłoszeń, bloga, bannerów

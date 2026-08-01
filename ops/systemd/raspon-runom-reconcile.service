@@ -1,0 +1,12 @@
+[Unit]
+Description=Reconcile Raspon bookings pending RUNOM refund approval
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/raspon/scripts/process-runom-reconcile.sh
+TimeoutStartSec=60
+PrivateTmp=true
+NoNewPrivileges=true
