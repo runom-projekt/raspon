@@ -37,7 +37,7 @@ Opcja B. WYŁĄCZNIE ścieżka `CONFIRMED`+`PAID` (`decision.reversal === "FULL_
 
 ## Konsekwencje
 
-- Nowe, nullable pole `Booking.pendingCancellationTaskId` (Prisma `db push`, zero danych do migracji, wszystkie istniejące wiersze dostają `NULL`).
+- Nowe, nullable pole `Booking.pendingCancellationTaskId` (wersjonowana migracja Prisma `20260801180000_pending_cancellation_task_id`, zero danych do migracji, wszystkie istniejące wiersze dostają `NULL`).
 - Nowy klient `src/lib/runom.ts` (fetch z timeoutem 10s, ten sam wzorzec co `src/lib/paymentGateway.ts`).
 - `cancelBookingByRenter` zwraca teraz `{ outcome: "cancelled" | "pending_review", ... }` zamiast bezpośrednio `PaymentReversal | null` — **breaking change sygnatury**, zaktualizowano jedynego wywołującego (`/api/bookings/[id]/cancel`, zwraca teraz `202` z `pendingReview: true` dla przypadku oczekującego) oraz test integracyjny koncurrencji (`bookingService.integration.test.ts`, teraz uruchamia lokalny serwer zastępczy RUNOM na czas testu zamiast pomijać tę ścieżkę).
 - Nowy worker `POST /api/internal/runom-reconcile` (ten sam wzorzec sekretu co `/api/internal/payment-reversals/process`) — odpytuje RUNOM dla każdej rezerwacji z niepustym `pendingCancellationTaskId`, finalizuje zatwierdzone (wykonuje anulowanie + kolejkuje `PaymentReversal`, dokładnie ta sama transakcja co dotychczasowa ścieżka natychmiastowa) lub odrzucone (czyści oczekiwanie, rezerwacja ZOSTAJE `CONFIRMED`, renter dostaje powiadomienie o odmowie).
@@ -47,7 +47,7 @@ Opcja B. WYŁĄCZNIE ścieżka `CONFIRMED`+`PAID` (`decision.reversal === "FULL_
 
 ## Plan wdrożenia i wycofania
 
-1. `prisma db push` na środowisku docelowym (dodaje wyłącznie nullable kolumnę — bezpieczne, odwracalne przez kolejny `db push` bez tej kolumny w schemacie).
+1. `prisma migrate deploy` na środowisku docelowym (aplikuje `20260801180000_pending_cancellation_task_id` — dodaje wyłącznie nullable kolumnę i indeks, bezpieczne, odwracalne ręcznym `ALTER TABLE ... DROP COLUMN`).
 2. Ustawić zmienne `RUNOM_*` w `.env` produkcyjnym (agent RUNOM już zarejestrowany po stronie RUNOM, token przekazany poza repozytorium).
 3. Skonfigurować worker cron/systemd wywołujący `POST /api/internal/runom-reconcile` z `X-Worker-Secret` (ten sam sekret co `NOTIFICATION_WORKER_SECRET`), interwał do ustalenia operacyjnie (proponowane: co 60s, dopóki nie pojawi się realna potrzeba szybszej reakcji).
 4. Obserwowalność: `auditLog` (`BOOKING_CANCELLATION_AWAITING_APPROVAL`, `BOOKING_CANCELLATION_DECLINED`) + istniejące `BOOKING_CANCELLED_BY_RENTER`.
