@@ -192,9 +192,13 @@ Dokumenty tożsamości używają `R2_PRIVATE_BUCKET_NAME`. Ten bucket:
 - pozwala poświadczeniom aplikacji na `PutObject` i `GetObject`;
 - powinien mieć reguły retencji uzgodnione z właścicielem procesu RODO.
 
-Po wdrożeniu należy zinwentaryzować wartości `User.identityDocumentUrl`. Wartości
-zaczynające się od `http://` lub `https://` oznaczają stare publiczne dokumenty
-i muszą zostać przeniesione albo bezpiecznie usunięte.
+Inwentaryzacja wykonana 2026-08-01 (`SELECT count(*) ... LIKE 'http%'` na
+produkcyjnej bazie): zero rekordów `User.identityDocumentUrl` oraz zero wierszy
+w `TrailerDocument` — tabela jest pusta. Prywatny bucket istniał od pierwszego
+uploadu KYC, więc nie ma starych publicznych dokumentów do migracji ani
+usunięcia. Jeśli w przyszłości pojawi się wartość zaczynająca się od `http://`
+lub `https://`, oznacza to regresję (np. kod znowu zapisuje publiczny URL) i
+wymaga pilnego zbadania, nie rutynowej migracji.
 
 ### Resend i MessageBird
 

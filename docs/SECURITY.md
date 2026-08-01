@@ -34,18 +34,26 @@ formalnej zgodności ani zastępstwem audytu prawnego.
 
 ## Znane ryzyka blokujące bezpieczną produkcję
 
-Stan na 2026-07-31:
+Stan na 2026-08-01:
 
 1. Produkcyjne integracje Revolut, Resend, MessageBird i prywatny bucket R2
    wymagają dostarczenia poświadczeń przez właścicieli kont dostawców.
-2. Dokumenty KYC utworzone przed wdrożeniem prywatnego bucketu wymagają migracji
-   lub bezpiecznego usunięcia.
-3. Backup PostgreSQL pozostaje lokalny na VPS; wymaga szyfrowanej kopii off-site.
-4. CSP i HSTS wymagają sprawdzenia raportów oraz smoke testu na środowisku
+2. Backup PostgreSQL pozostaje lokalny na VPS; wymaga szyfrowanej kopii off-site.
+3. CSP i HSTS wymagają sprawdzenia raportów oraz smoke testu na środowisku
    produkcyjnym po wdrożeniu.
+4. Upload dokumentów (KYC, dowód rejestracyjny) trafia bezpośrednio z
+   przeglądarki do R2 przez presigned URL — serwer nigdy nie widzi bajtów
+   pliku, więc nie ma dziś walidacji rzeczywistego formatu ani skanowania
+   pod kątem złośliwej zawartości (ufamy wyłącznie deklarowanemu przez
+   klienta `Content-Type`).
 
 Usunięte ryzyka:
 
+- 2026-08-01 — zinwentaryzowano `User.identityDocumentUrl` i
+  `TrailerDocument.url` na produkcji: 0 z 7 użytkowników ma jakikolwiek
+  dokument tożsamości, tabela `TrailerDocument` jest pusta. Prywatny bucket
+  R2 działał od pierwszego uploadu KYC — nie istnieją stare publiczne
+  dokumenty do migracji ani usunięcia.
 - 2026-07-31 — publiczny endpoint statusu ograniczono zgodnie z
   [ADR 0001](adr/0001-booking-status-machine.md), a macierz przejść objęto testem.
 - 2026-07-31 — sprawdzenie dostępności, użycie rabatu, rezerwację i płatność

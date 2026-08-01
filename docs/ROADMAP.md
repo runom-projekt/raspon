@@ -71,7 +71,8 @@ etapów 0–2.
 
 - [x] Rozdzielić upload KYC do osobnego prywatnego bucketu.
 - [x] Wprowadzić 60-sekundowe URL-e dla upoważnionych administratorów.
-- [ ] Przenieść lub usunąć dokumenty zapisane wcześniej jako publiczne URL-e.
+- [x] Przenieść lub usunąć dokumenty zapisane wcześniej jako publiczne URL-e
+  — zinwentaryzowano 2026-08-01, zero rekordów w produkcji, nic do migracji.
 - [ ] Walidować rzeczywisty format pliku i skanować uploady.
 - [ ] Ustalić retencję dokumentów oraz automatyczne usuwanie.
 - [ ] Dodać rejestr dostępu do dokumentów.
