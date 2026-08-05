@@ -166,14 +166,29 @@ najemcę. Stan workera znajduje się w
 Bez skonfigurowanych zmiennych `RUNOM_*` ta ścieżka anulowania zwraca `503` —
 świadomie, zamiast cicho pomijać ocenę ryzyka.
 
-RUNOM działa na tym samym VPS jako osobna usługa (`services/memory-api`,
-repo `runom`), wystawiona wyłącznie na `127.0.0.1:3200` we własnej,
-odizolowanej sieci Docker — kontener `app` Raspon nie jest w tej sieci.
-`RUNOM_API_URL` musi więc wskazywać `http://host.docker.internal:3200`, nie
-`http://127.0.0.1:3200` — kontener `app` mapuje `host.docker.internal` na
-bramę hosta przez `extra_hosts: host-gateway` w `docker-compose.prod.yml`.
-Wskazanie `127.0.0.1` z wnętrza kontenera trafia w sam kontener, nie w host,
-i każde wywołanie RUNOM kończy się błędem sieciowym.
+RUNOM działa na tym samym VPS jako osobna, trwała usługa (`services/memory-api`,
+repo `runom`, kontener `runom-dev-app`), wystawiona wyłącznie na
+`127.0.0.1:3200` we własnej, celowo odizolowanej sieci Docker (`runom-dev-net`)
+— kontener `app` Raspon nie jest w tej sieci i nie może wołać `127.0.0.1:3200`
+bezpośrednio (z jego wnętrza `127.0.0.1` to on sam, nie host). Host nginx (ten
+sam proces, który kończy TLS dla `raspon.de` i proxuje `/` do `127.0.0.1:3000`)
+proxuje dodatkowo publiczną ścieżkę do RUNOM lokalnie:
+
+```nginx
+location ^~ /runom-internal/ {
+    proxy_pass http://127.0.0.1:3200/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+`RUNOM_API_URL` w produkcyjnym `.env` wskazuje więc
+`https://raspon.de/runom-internal` (bez końcowego `/`) — ten sam wzorzec co
+zewnętrzny `PAYMENT_GATEWAY_URL`, nie adres wewnętrzny Dockera. Ten blok nginx
+nie jest częścią repozytorium (konfiguracja nginx na hoście nie jest
+wersjonowana, zob. `docs/ARCHITECTURE.md`) — przy odtwarzaniu serwera od zera
+trzeba go dodać ręcznie do `/etc/nginx/sites-available/raspon` przed pierwszym
+`nginx -s reload`.
 
 ## Audit administracyjny
 
