@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { TRAILER_CATEGORIES } from "@/lib/constants";
 
@@ -15,20 +14,8 @@ export function Footer() {
             <span className="font-display text-xl font-bold text-white">Raspon</span>
           </Link>
           <p className="mt-4 max-w-xs text-sm text-graphite-400">
-            Die größte europäische Plattform für Anhängervermietung. Mieten oder vermieten — sicher und bequem.
+            Der digitale Marktplatz für Anhängervermietung. Mieten oder vermieten — einfach und bequem.
           </p>
-          <div className="mt-6 flex gap-3">
-            {[Facebook, Instagram, Linkedin, Youtube].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-graphite-900 text-graphite-300 hover:bg-accent-500 hover:text-white"
-                aria-label="Soziale Medien"
-              >
-                <Icon size={16} />
-              </a>
-            ))}
-          </div>
         </div>
 
         <div>

@@ -10,7 +10,7 @@ import { ArrowRight, Check } from "lucide-react";
 export const metadata: Metadata = {
   title: "Anhänger vermieten und Geld verdienen",
   description:
-    "Vermieten Sie Ihren Anhänger auf Raspon und verdienen Sie Geld, wenn Sie ihn nicht nutzen. Sichere Zahlungen, verifizierte Mieter, volle Kontrolle über den Kalender.",
+    "Vermieten Sie Ihren Anhänger auf Raspon und verdienen Sie Geld, wenn Sie ihn nicht nutzen. Sie bestimmen Preis und Verfügbarkeit.",
 };
 
 export default async function AddTrailerLandingPage() {
@@ -25,7 +25,7 @@ export default async function AddTrailerLandingPage() {
       <main>
         <section className="container-page py-16 text-center lg:py-24">
           <span className="mb-6 inline-flex items-center gap-2 rounded-full bg-accent-50 px-4 py-1.5 text-sm font-semibold text-accent-600">
-            Schließen Sie sich Tausenden Vermietern an
+            Ihr Anhänger kann mehr
           </span>
           <h1 className="mx-auto max-w-2xl text-balance font-display text-4xl font-bold tracking-tight text-graphite-900 sm:text-5xl">
             Verdienen Sie Geld mit Ihrem Anhänger
@@ -48,7 +48,7 @@ export default async function AddTrailerLandingPage() {
             {[
               "Sie legen Preis und Verfügbarkeit fest",
               "Zahlungen werden automatisch abgerechnet",
-              "Support und Verifizierung der Mieter",
+              "Anfragen und Buchungen digital verwalten",
             ].map((item) => (
               <div key={item} className="flex items-start gap-3 rounded-2xl border border-graphite-100 p-5">
                 <Check size={18} className="mt-0.5 shrink-0 text-accent-500" />

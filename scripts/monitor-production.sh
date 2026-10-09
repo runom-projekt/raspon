@@ -58,6 +58,14 @@ if [[ "$operations_response" != *'"status":"ok"'* ]]; then
   issues+=("operational-queues")
 fi
 
+email_response="$(curl --silent --show-error \
+  --connect-timeout 5 --max-time 20 \
+  -H "x-worker-secret: ${NOTIFICATION_WORKER_SECRET:-}" \
+  http://127.0.0.1:3000/api/internal/integrations/email 2>/dev/null || true)"
+if [[ "$email_response" != *'"status":"ok"'* ]]; then
+  issues+=("email-delivery")
+fi
+
 disk_percent="$(df -P / | awk 'NR == 2 { gsub(/%/, "", $5); print $5 }')"
 if [[ ! "$disk_percent" =~ ^[0-9]+$ ]] || (( disk_percent >= DISK_LIMIT_PERCENT )); then
   issues+=("disk")

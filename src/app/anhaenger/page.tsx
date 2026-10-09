@@ -11,7 +11,7 @@ import { SlidersHorizontal } from "lucide-react";
 export const metadata: Metadata = {
   title: "Anhänger zum Mieten finden",
   description:
-    "Durchsuchen Sie Tausende verfügbare Anhänger in Ihrer Nähe — Lastenanhänger, Autotransporter, Wohnwagen und mehr. Online buchen in wenigen Minuten.",
+    "Finden Sie verfügbare Anhänger in Ihrer Nähe — Lastenanhänger, Autotransporter, Wohnwagen und mehr.",
 };
 
 interface PageProps {

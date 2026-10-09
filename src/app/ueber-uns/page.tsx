@@ -7,7 +7,7 @@ import { Heart, ShieldCheck, Leaf, Headset } from "lucide-react";
 export const metadata: Metadata = {
   title: "Über uns",
   description:
-    "Raspon ist die europäische Plattform für Anhängervermietung — wir verbinden Anhängerbesitzer mit Menschen, die kurzfristig einen Anhänger brauchen.",
+    "Raspon ist ein digitaler Marktplatz für Anhängervermietung — wir verbinden Anhängerbesitzer mit Menschen, die kurzfristig einen Anhänger brauchen.",
 };
 
 const VALUES = [
@@ -52,16 +52,16 @@ export default function AboutPage() {
 
           <dl className="mx-auto mt-14 grid max-w-2xl grid-cols-3 gap-6 border-t border-graphite-100 pt-8">
             <div>
-              <dt className="text-2xl font-bold text-graphite-900 sm:text-3xl">12.000+</dt>
-              <dd className="mt-1 text-sm text-graphite-500">Anhänger im Angebot</dd>
+              <dt className="text-lg font-bold text-graphite-900 sm:text-xl">Digital</dt>
+              <dd className="mt-1 text-sm text-graphite-500">Suchen und verwalten</dd>
             </div>
             <div>
-              <dt className="text-2xl font-bold text-graphite-900 sm:text-3xl">98%</dt>
-              <dd className="mt-1 text-sm text-graphite-500">zufriedene Kunden</dd>
+              <dt className="text-lg font-bold text-graphite-900 sm:text-xl">Transparent</dt>
+              <dd className="mt-1 text-sm text-graphite-500">Preise und Zeiträume</dd>
             </div>
             <div>
-              <dt className="text-2xl font-bold text-graphite-900 sm:text-3xl">150+</dt>
-              <dd className="mt-1 text-sm text-graphite-500">Städte in Deutschland</dd>
+              <dt className="text-lg font-bold text-graphite-900 sm:text-xl">Direkt</dt>
+              <dd className="mt-1 text-sm text-graphite-500">Mieter und Vermieter</dd>
             </div>
           </dl>
         </section>

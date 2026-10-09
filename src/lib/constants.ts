@@ -2,7 +2,7 @@ import type { TrailerCategory } from "@prisma/client";
 
 export const APP_NAME = "Raspon";
 export const APP_DESCRIPTION =
-  "Raspon — die europäische Plattform für Anhängervermietung. Finden oder vermieten Sie einen Anhänger in wenigen Minuten.";
+  "Raspon — der digitale Marktplatz für Anhängervermietung. Finden oder vermieten Sie einen Anhänger online.";
 export const DEFAULT_COMMISSION_PCT = 15;
 
 export const TRAILER_CATEGORIES: Record<
@@ -37,7 +37,7 @@ export const HOW_IT_WORKS_STEPS = [
   {
     step: 1,
     title: "Anhänger finden",
-    description: "Durchsuchen Sie Hunderte verfügbarer Anhänger in Ihrer Nähe und wählen Sie den passenden aus.",
+    description: "Durchsuchen Sie verfügbare Anhänger in Ihrer Nähe und wählen Sie den passenden aus.",
   },
   {
     step: 2,
@@ -57,12 +57,12 @@ export const HOW_IT_WORKS_STEPS = [
 ];
 
 export const WHY_US_ITEMS = [
-  { title: "Tausende Anhänger", description: "Die größte Auswahl an Anhängern in Deutschland und Europa." },
+  { title: "Angebote in Ihrer Nähe", description: "Vergleichen Sie veröffentlichte Anhänger nach Standort, Typ und Preis." },
   { title: "Niedrige Preise", description: "Wettbewerbsfähige Preise direkt von den Eigentümern." },
   { title: "Sichere Zahlungen", description: "Online-Zahlungen geschützt und vollständig verschlüsselt." },
-  { title: "Verifizierte Vermieter", description: "Jeder Vermieter durchläuft einen Verifizierungsprozess." },
+  { title: "Geprüfte Anzeigen", description: "Neue Anzeigen werden vor ihrer Veröffentlichung geprüft." },
   { title: "Kaution als Schutz", description: "Kaution und geprüfte Anzeigen sichern Mieter und Vermieter ab." },
-  { title: "Support", description: "Unser Support-Team ist 7 Tage die Woche erreichbar." },
+  { title: "Direkter Support", description: "Bei Fragen erreichen Sie uns über das Kontaktformular." },
 ];
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://raspon.de";

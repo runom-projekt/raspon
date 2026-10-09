@@ -30,6 +30,35 @@ function getClient(): Resend {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
+function getSmtpTransport() {
+  const port = smtpPort();
+  if (!isSmtpConfigured() || !port) throw new Error("Email provider configuration unavailable");
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port,
+    secure: process.env.SMTP_SECURE === "true" || port === 465,
+    requireTLS: port !== 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
+    tls: { minVersion: "TLSv1.2" },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
+    disableFileAccess: true,
+    disableUrlAccess: true,
+  });
+}
+
+export async function verifyEmailDelivery(): Promise<"resend" | "smtp"> {
+  if (isResendConfigured()) return "resend";
+  const transport = getSmtpTransport();
+  try {
+    await transport.verify();
+    return "smtp";
+  } finally {
+    transport.close();
+  }
+}
+
 async function sendEmail({ to, subject, html, idempotencyKey }: { to: string; subject: string; html: string; idempotencyKey?: string }) {
   if (isResendConfigured()) {
     const { error } = await getClient().emails.send(
@@ -40,24 +69,18 @@ async function sendEmail({ to, subject, html, idempotencyKey }: { to: string; su
     return;
   }
   if (!isSmtpConfigured()) throw new Error("Email provider configuration unavailable");
-  const port = smtpPort()!;
-  const transport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port,
-    secure: process.env.SMTP_SECURE === "true" || port === 465,
-    requireTLS: port !== 465,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
-    tls: { minVersion: "TLSv1.2" },
-    disableFileAccess: true,
-    disableUrlAccess: true,
-  });
-  await transport.sendMail({
-    from: `Raspon <${process.env.SMTP_FROM_EMAIL}>`,
-    to,
-    subject,
-    html,
-    ...(idempotencyKey ? { messageId: `<${idempotencyKey.replaceAll("/", ".")}@raspon.de>` } : {}),
-  });
+  const transport = getSmtpTransport();
+  try {
+    await transport.sendMail({
+      from: `Raspon <${process.env.SMTP_FROM_EMAIL}>`,
+      to,
+      subject,
+      html,
+      ...(idempotencyKey ? { messageId: `<${idempotencyKey.replaceAll("/", ".")}@raspon.de>` } : {}),
+    });
+  } finally {
+    transport.close();
+  }
 }
 
 function escapeHtml(value: string): string {

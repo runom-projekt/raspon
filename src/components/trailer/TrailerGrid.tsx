@@ -13,7 +13,7 @@ export async function TrailerGrid() {
           <h2 className="font-display text-3xl font-bold tracking-tight text-graphite-900 sm:text-4xl">
             Verfügbare Anhänger
           </h2>
-          <p className="mt-2 text-graphite-600">Für Sie ausgewählt aus Tausenden Angeboten in Ihrer Nähe.</p>
+          <p className="mt-2 text-graphite-600">Entdecken Sie veröffentlichte Angebote und vergleichen Sie Preise und Standorte.</p>
         </div>
         <Link
           href="/anhaenger"

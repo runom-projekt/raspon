@@ -17,7 +17,7 @@ export function CtaSection() {
           Verdienen Sie Geld mit Ihrem Anhänger
         </h2>
         <p className="relative mx-auto mt-3 max-w-md text-graphite-300">
-          Schließen Sie sich Tausenden Vermietern an, die zusätzliches Geld verdienen, indem sie ihre Anhänger vermieten, wenn sie sie nicht nutzen.
+          Erstellen Sie Ihr Angebot und verdienen Sie zusätzliches Geld, wenn Sie Ihren Anhänger gerade nicht selbst nutzen.
         </p>
         <div className="relative mt-8">
           <Button href="/anhaenger-vermieten" size="lg" icon={<ArrowRight size={20} />} iconPosition="right">
