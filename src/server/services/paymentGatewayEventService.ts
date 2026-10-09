@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { decidePaymentCompletion } from "@/server/domain/paymentCompletion";
 import { appendAuditLog } from "@/server/services/auditService";
 import { lockTrailerSchedule } from "@/server/services/bookingService";
+import type { PaymentProvider } from "@prisma/client";
 
 export interface PaymentGatewayEvent {
   eventId: string;
@@ -19,7 +20,7 @@ export class PaymentGatewayEventError extends Error {
   }
 }
 
-export async function processPaymentGatewayEvent({ event, payloadHash, requestId }: { event: PaymentGatewayEvent; payloadHash: string; requestId: string | null }) {
+export async function processPaymentGatewayEvent({ event, payloadHash, requestId, provider = "REVOLUT", providerCaptureId }: { event: PaymentGatewayEvent; payloadHash: string; requestId: string | null; provider?: PaymentProvider; providerCaptureId?: string }) {
   const initial = await prisma.payment.findUnique({ where: { id: event.paymentId }, include: { booking: true } });
   if (!initial) throw new PaymentGatewayEventError("NOT_FOUND");
   if (initial.amount.mul(100).toDecimalPlaces(0).toNumber() !== event.amountMinor || initial.currency.toUpperCase() !== event.currency.toUpperCase()) {
@@ -41,7 +42,7 @@ export async function processPaymentGatewayEvent({ event, payloadHash, requestId
       throw new PaymentGatewayEventError("PROVIDER_ORDER_MISMATCH");
     }
     const claimed = await tx.paymentWebhookEvent.createMany({
-      data: [{ provider: "REVOLUT", eventType, providerOrderId: event.providerOrderId, payloadHash }],
+      data: [{ provider, eventType, providerOrderId: event.providerOrderId, payloadHash }],
       skipDuplicates: true,
     });
     if (claimed.count === 0) return;
@@ -52,7 +53,7 @@ export async function processPaymentGatewayEvent({ event, payloadHash, requestId
       if (payment.status !== "REFUNDED") {
         await tx.payment.updateMany({
           where: { id: payment.id, status: { in: ["REQUIRES_PAYMENT", "AUTHORIZED", "FAILED", "PAID"] } },
-          data: { status: "PAID", providerPaymentId: event.providerOrderId },
+          data: { status: "PAID", providerPaymentId: event.providerOrderId, ...(providerCaptureId ? { providerCaptureId } : {}) },
         });
       }
       if (action === "CONFIRM_BOOKING") {
@@ -106,7 +107,7 @@ export async function processPaymentGatewayEvent({ event, payloadHash, requestId
       outcome = "PAYMENT_FAILED";
     }
     await tx.paymentWebhookEvent.update({
-      where: { provider_eventType_providerOrderId: { provider: "REVOLUT", eventType, providerOrderId: event.providerOrderId } },
+      where: { provider_eventType_providerOrderId: { provider, eventType, providerOrderId: event.providerOrderId } },
       data: { processedAt: new Date(), outcome },
     });
   });

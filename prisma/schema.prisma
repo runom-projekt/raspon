@@ -322,6 +322,8 @@ model Booking {
 
 enum PaymentProvider {
   REVOLUT
+  PAYPAL
+  BANK_TRANSFER
 }
 
 enum PaymentStatus {
@@ -339,6 +341,7 @@ model Payment {
   booking           Booking           @relation(fields: [bookingId], references: [id])
   provider          PaymentProvider   @default(REVOLUT)
   providerPaymentId String?
+  providerCaptureId String?           @unique
   status            PaymentStatus     @default(REQUIRES_PAYMENT)
   amount            Decimal           @db.Decimal(10, 2)
   currency          String            @default("EUR")

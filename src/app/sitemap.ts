@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/constants";
+import { slugify } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [trailers, posts] = await Promise.all([
+  const [trailers, posts, cities] = await Promise.all([
     prisma.trailer.findMany({
       where: { status: "PUBLISHED" },
       select: { slug: true, updatedAt: true },
@@ -15,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { status: "PUBLISHED" },
       select: { slug: true, updatedAt: true },
     }),
+    prisma.trailer.findMany({ where: { status: "PUBLISHED" }, distinct: ["city"], select: { city: true, updatedAt: true } }),
   ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -39,5 +41,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticRoutes, ...trailerRoutes, ...blogRoutes];
+  const cityRoutes: MetadataRoute.Sitemap = cities.map((entry) => ({ url: `${SITE_URL}/anhaenger-mieten/${slugify(entry.city)}`, lastModified: entry.updatedAt, changeFrequency: "daily", priority: 0.8 }));
+  return [...staticRoutes, ...cityRoutes, ...trailerRoutes, ...blogRoutes];
 }

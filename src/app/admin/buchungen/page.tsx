@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { ConfirmBankTransferButton } from "@/components/admin/ConfirmBankTransferButton";
 
 export const metadata: Metadata = { title: "Buchungen | Admin-Panel" };
 
@@ -11,6 +12,7 @@ export default async function AdminBookingsPage() {
     include: {
       trailer: { select: { title: true } },
       renter: { select: { firstName: true, lastName: true } },
+      payment: true,
     },
   });
 
@@ -29,6 +31,7 @@ export default async function AdminBookingsPage() {
               <th className="p-4 font-medium">Betrag</th>
               <th className="p-4 font-medium">Provision</th>
               <th className="p-4 font-medium">Status</th>
+              <th className="p-4 font-medium">Zahlung</th>
             </tr>
           </thead>
           <tbody>
@@ -44,6 +47,11 @@ export default async function AdminBookingsPage() {
                 <td className="p-4 text-graphite-600">{formatCurrency(b.commissionAmt.toString(), b.currency)}</td>
                 <td className="p-4">
                   <span className="rounded-full bg-graphite-100 px-2.5 py-1 text-xs font-semibold">{b.status}</span>
+                </td>
+                <td className="p-4">
+                  {b.payment?.provider === "BANK_TRANSFER" && b.payment.status !== "PAID"
+                    ? <ConfirmBankTransferButton bookingId={b.id} />
+                    : <span className="text-xs text-graphite-500">{b.payment?.provider ?? "–"} · {b.payment?.status ?? "–"}</span>}
                 </td>
               </tr>
             ))}

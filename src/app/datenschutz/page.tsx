@@ -53,12 +53,11 @@ export default function DatenschutzPage() {
 
       <h2>6. Buchung und Zahlungsabwicklung</h2>
       <p>
-          Raspon vermittelt den Kontakt. Für die Zahlungsabwicklung wird der Mieter auf eine gesicherte,
-          von HMS Runo betriebene Raspon-Zahlungsseite unter <strong>hms-runo.de</strong> weitergeleitet.
-          Dorthin werden nur eine kurzlebige Zahlungsreferenz, Buchungscode, Betrag und Währung übertragen.
-          HMS Runo erstellt darüber die Zahlung beim Zahlungsdienstleister <strong>Revolut</strong>.
-          Zahlungsdaten (z. B. Kartendaten) werden ausschließlich von Revolut verarbeitet und sind Raspon
-          nicht zugänglich. Der Mietvertrag über den Anhänger kommt direkt zwischen Vermieter und
+          Raspon vermittelt den Kontakt. Bei einer PayPal-Zahlung werden Buchungscode, Betrag, Währung und
+          eine technische Zahlungsreferenz an <strong>PayPal</strong> übertragen. Zahlungsdaten werden
+          ausschließlich von PayPal verarbeitet und sind Raspon nicht zugänglich. Bei einer Banküberweisung
+          verarbeitet Raspon den Buchungscode als Verwendungszweck und bestätigt den Zahlungseingang manuell.
+          Der Mietvertrag über den Anhänger kommt direkt zwischen Vermieter und
         Mieter zustande; Raspon inkassiert die Zahlung im Auftrag des Vermieters, behält eine
         Vermittlungsprovision ein und zahlt den Restbetrag periodisch an den Vermieter aus.
       </p>
@@ -114,8 +113,8 @@ export default function DatenschutzPage() {
       <ul>
         <li>Contabo GmbH (Hosting-Infrastruktur, Deutschland)</li>
         <li>Cloudflare, Inc. (Objektspeicher für Bilder/Dateien)</li>
-          <li>HMS Runo (technische Zahlungsbrücke unter hms-runo.de)</li>
-          <li>Revolut (Zahlungsabwicklung)</li>
+          <li>PayPal (Zahlungsabwicklung, sofern gewählt)</li>
+          <li>kontoführendes Kreditinstitut (Banküberweisung, sofern gewählt)</li>
         <li>MessageBird B.V. (Versand von SMS-Benachrichtigungen, Niederlande)</li>
       </ul>
       <p>

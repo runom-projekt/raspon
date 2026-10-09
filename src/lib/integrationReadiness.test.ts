@@ -20,7 +20,7 @@ describe("integration readiness", () => {
 
   test("requires both payment credentials and all private storage credentials", () => {
     const readiness = getIntegrationReadiness({
-      PAYMENT_GATEWAY_URL: "https://hms-runo.de/raspon/pay/",
+      PAYPAL_CLIENT_ID: "client",
       RESEND_API_KEY: "secret",
       RESEND_FROM_EMAIL: "noreply@example.test",
       R2_ACCOUNT_ID: "account",
@@ -36,8 +36,8 @@ describe("integration readiness", () => {
 
   test("marks the portal ready when critical integrations are complete", () => {
     const readiness = getIntegrationReadiness({
-      PAYMENT_GATEWAY_URL: "https://hms-runo.de/raspon/pay/",
-      PAYMENT_GATEWAY_SECRET: "s".repeat(32),
+      PAYPAL_CLIENT_ID: "client",
+      PAYPAL_CLIENT_SECRET: "secret",
       RESEND_API_KEY: "secret",
       RESEND_FROM_EMAIL: "noreply@example.test",
       R2_ACCOUNT_ID: "account",

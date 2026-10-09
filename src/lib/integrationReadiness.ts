@@ -24,7 +24,8 @@ export function getIntegrationReadiness(
   );
   return {
     payments:
-      env.PAYMENT_GATEWAY_URL && env.PAYMENT_GATEWAY_SECRET
+      (env.PAYPAL_CLIENT_ID && env.PAYPAL_CLIENT_SECRET) ||
+      (env.BANK_TRANSFER_IBAN && env.BANK_TRANSFER_ACCOUNT_HOLDER)
         ? "configured"
         : "unavailable",
     email:

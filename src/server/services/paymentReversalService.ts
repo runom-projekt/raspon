@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { submitGatewayReversal } from "@/lib/paymentGateway";
 import { getReversalRetryDelayMs } from "@/server/domain/bookingCancellation";
 import { appendAuditLog } from "@/server/services/auditService";
+import { refundPayPalCapture } from "@/lib/paypal";
 
 const MAX_ATTEMPTS = 8;
 const STALE_SUBMISSION_MS = 5 * 60 * 1000;
@@ -20,18 +21,32 @@ export async function processPaymentReversal(reversalId: string, now = new Date(
   });
   if (claimed.count !== 1) return "skipped";
   const reversal = await prisma.paymentReversal.findUniqueOrThrow({ where: { id: reversalId }, include: { payment: true } });
+  if (reversal.payment.provider === "BANK_TRANSFER") {
+    await prisma.paymentReversal.update({ where: { id: reversal.id }, data: { status: "FAILED", processingStartedAt: null, lastError: "Manual bank transfer refund required" } });
+    return "skipped";
+  }
   if (!reversal.payment.providerPaymentId) {
     await prisma.paymentReversal.update({ where: { id: reversal.id }, data: { status: "FAILED", lastError: "Missing provider order ID" } });
     return "skipped";
   }
   try {
-    const result = await submitGatewayReversal({
-      reversalId: reversal.id,
-      type: reversal.type,
-      providerOrderId: reversal.payment.providerPaymentId,
-      amountMinor: reversal.amount.mul(100).toDecimalPlaces(0).toNumber(),
-      currency: reversal.currency.toUpperCase(),
-    });
+    const result = reversal.payment.provider === "PAYPAL"
+      ? {
+          providerOperationId: await refundPayPalCapture(
+            reversal.payment.providerCaptureId ?? "",
+            reversal.amount.toFixed(2),
+            reversal.currency.toUpperCase(),
+            `refund-${reversal.id}`
+          ),
+          state: "COMPLETED" as const,
+        }
+      : await submitGatewayReversal({
+          reversalId: reversal.id,
+          type: reversal.type,
+          providerOrderId: reversal.payment.providerPaymentId,
+          amountMinor: reversal.amount.mul(100).toDecimalPlaces(0).toNumber(),
+          currency: reversal.currency.toUpperCase(),
+        });
     const completed = result.state === "COMPLETED";
     const applied = await prisma.$transaction(async (tx) => {
       const currentApplied = await tx.paymentReversal.updateMany({

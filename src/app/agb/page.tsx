@@ -53,7 +53,7 @@ export default function AgbPage() {
       <h2>§ 6 Preise, Provision und Zahlungsabwicklung</h2>
       <p>
         Die Miete zahlt der Mieter vollständig im Voraus über die Plattform an den Betreiber, der die
-        Zahlung über den Zahlungsdienstleister Revolut im Auftrag des Vermieters einzieht. Der Betreiber
+        Zahlung über PayPal oder nach bestätigtem Bankeingang im Auftrag des Vermieters einzieht. Der Betreiber
         behält hiervon eine Vermittlungsprovision in der bei der jeweiligen Anzeige ausgewiesenen Höhe
         (derzeit 15 % des Mietpreises) ein und zahlt den Restbetrag periodisch an den Vermieter aus. Eine
         vom Vermieter verlangte Kaution wird gesondert ausgewiesen und nach Rückgabe des Anhängers
